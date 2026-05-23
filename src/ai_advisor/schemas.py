@@ -229,6 +229,41 @@ class AdviceLogEntry(AdvisorBaseModel):
     human_feedback: str | None = None
 
 
+class EvaluationLogEntry(AdvisorBaseModel):
+    timestamp: str
+    evaluation_type: str = "followup_5d"
+    advice_date: str | None
+    stock_id: str | None
+    input_context_hash: str | None
+    advice_close: float | None
+    close_5d: float | None
+    benchmark_return_5d_pct: float | None
+    stock_return_5d_pct: float | None
+    alpha_5d_pct: float | None
+    alpha_hit_5d: bool | None
+    included_in_alpha_denominator: bool
+    exclusion_reason: str | None
+    source_followup_csv: str
+
+
+class AlphaSummary(AdvisorBaseModel):
+    evaluation_type: str = "followup_5d"
+    advice_log_path: str
+    followup_csv_path: str
+    evaluation_log_path: str
+    advice_snapshot_count: int
+    followup_row_count: int
+    matched_advice_count: int
+    appended_evaluation_count: int
+    actionable_candidate_count: int
+    complete_followup_count: int
+    alpha_hit_count: int
+    alpha_hit_rate_5d_vs_market: float | None
+    average_alpha_5d_pct: float | None
+    warnings: list[str]
+    records: list[EvaluationLogEntry]
+
+
 def get_context_path(context: StockAdviceContext, path: str) -> Any:
     current: Any = context
     for part in path.split("."):

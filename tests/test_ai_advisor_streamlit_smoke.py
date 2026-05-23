@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import importlib.util
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 
@@ -82,7 +83,7 @@ def test_detail_view_model_displays_final_stock_plan_sections() -> None:
     assert ranked[0].guarded_advice.final_advice.summary in sections["conclusion"]
 
 
-def test_alpha_evaluation_view_uses_placeholder_until_session_h() -> None:
+def test_alpha_evaluation_view_uses_placeholder_without_complete_followup_records() -> None:
     paths, _ = app.load_folder_context_paths(str(FIXTURE_DIR), max_batch_size=20)
     ranked = app.run_batch(app.MODE_FAKE, paths, append_log=False)
     view_model = app.alpha_evaluation_view_model(ranked, evaluation_log_path="missing_evaluation_stub.jsonl")
@@ -121,3 +122,102 @@ def test_alpha_evaluation_view_can_read_existing_evaluation_stub(tmp_path: Path)
     assert view_model.alpha_hit_rate_5d_vs_market == 0.5
     assert view_model.average_alpha_5d_pct == 0.75
     assert "existing evaluation log" in (view_model.warning or "")
+
+
+def test_alpha_evaluation_view_uses_latest_evaluation_record_per_key(tmp_path: Path) -> None:
+    evaluation_log = tmp_path / "ai_advice_evaluation.jsonl"
+    records = [
+        {
+            "timestamp": "2026-05-23T10:00:00+00:00",
+            "stock_id": "3001",
+            "advice_date": "2026-05-23",
+            "input_context_hash": "hash-3001",
+            "included_in_alpha_denominator": True,
+            "alpha_hit_5d": False,
+            "alpha_5d_pct": -2.0,
+        },
+        {
+            "timestamp": "2026-05-23T11:00:00+00:00",
+            "stock_id": "3001",
+            "advice_date": "2026-05-23",
+            "input_context_hash": "hash-3001",
+            "included_in_alpha_denominator": True,
+            "alpha_hit_5d": True,
+            "alpha_5d_pct": 3.0,
+        },
+    ]
+    evaluation_log.write_text("\n".join(json.dumps(record) for record in records), encoding="utf-8")
+
+    view_model = app.alpha_evaluation_view_model([], evaluation_log_path=evaluation_log)
+
+    assert view_model.complete_followup_count == 1
+    assert view_model.alpha_hit_rate_5d_vs_market == 1.0
+    assert view_model.average_alpha_5d_pct == 3.0
+    assert "superseded records exist" in (view_model.warning or "")
+
+
+def test_followup_csv_upload_processes_csv_and_appends_evaluation_log(tmp_path: Path) -> None:
+    advice_log = tmp_path / "ai_advice_log.jsonl"
+    evaluation_log = tmp_path / "ai_advice_evaluation.jsonl"
+    advice_log.write_text(
+        json.dumps(
+            {
+                "timestamp": "2026-05-23T12:00:00+00:00",
+                "advice_type": "stock_batch",
+                "advice_date": "2026-05-23",
+                "stock_id": "3001",
+                "stock_name": "Stock 3001",
+                "advice_close": 100,
+                "market_type": "listed",
+                "benchmark_symbol": "TAIEX",
+                "input_context_hash": "hash-3001",
+                "model": "fake-demo",
+                "prompt_version": "v1.2",
+                "strategy_profile": "balanced",
+                "raw_recommendation": "small_probe",
+                "raw_grade": "A",
+                "final_recommendation": "small_probe",
+                "final_grade": "A",
+                "confidence": 82,
+                "was_downgraded": False,
+                "was_blocked": False,
+                "hallucination_suspected": False,
+                "guardrail_reasons": [],
+                "stock_return_5d_pct": None,
+                "benchmark_return_5d_pct": None,
+                "alpha_5d_pct": None,
+                "alpha_hit_5d": None,
+                "was_useful": None,
+                "human_feedback": None,
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    original_advice_log = advice_log.read_text(encoding="utf-8")
+    upload = UploadedFile(
+        name="followup.csv",
+        content=b"stock_id,advice_date,close_5d,benchmark_return_5d_pct\n3001,2026-05-23,104,1\n",
+    )
+
+    summary = app.process_followup_csv_upload(
+        upload,
+        advice_log_path=str(advice_log),
+        evaluation_log_path=str(evaluation_log),
+        cache_dir=tmp_path,
+    )
+
+    records = [json.loads(line) for line in evaluation_log.read_text(encoding="utf-8").splitlines()]
+    assert advice_log.read_text(encoding="utf-8") == original_advice_log
+    assert summary.alpha_hit_rate_5d_vs_market == 1.0
+    assert len(records) == 1
+    assert records[0]["alpha_5d_pct"] == 3
+
+
+@dataclass
+class UploadedFile:
+    name: str
+    content: bytes
+
+    def getvalue(self) -> bytes:
+        return self.content

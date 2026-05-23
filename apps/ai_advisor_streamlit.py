@@ -19,9 +19,9 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - exercised when running the app without the dependency.
     st = None
 
-from ai_advisor.batch_engine import generate_stock_batch_advice, rank_stock_advices
+from ai_advisor.batch_engine import generate_stock_batch_advice, rank_stock_advices, update_followup_returns
 from ai_advisor.config import DEFAULT_CONFIG
-from ai_advisor.schemas import GuardedAdviceOutput, RankedStockAdvice, StockAdviceContext
+from ai_advisor.schemas import AlphaSummary, GuardedAdviceOutput, RankedStockAdvice, StockAdviceContext
 
 
 SAFETY_NOTICE = "交易決策輔助，不是保證獲利或下單指令。"
@@ -248,7 +248,7 @@ def alpha_evaluation_view_model(
     evaluation_log_path: str | Path = DEFAULT_CONFIG.evaluation_log_path,
 ) -> AlphaEvaluationViewModel:
     actionable_count = sum(1 for row in ranked_advices if is_actionable_candidate(row))
-    records = read_existing_evaluation_records(evaluation_log_path)
+    records, has_superseded_records = latest_evaluation_records(read_existing_evaluation_records(evaluation_log_path))
     denominator_records = [
         record
         for record in records
@@ -264,19 +264,35 @@ def alpha_evaluation_view_model(
             alpha_hit_rate_5d_vs_market=None,
             average_alpha_5d_pct=None,
             source="placeholder",
-            warning="Follow-up CSV calculation is intentionally deferred to Session H.",
+            warning="No complete follow-up evaluation records found. Upload a follow-up CSV to calculate Session H metrics.",
         )
 
     hits = sum(1 for record in denominator_records if record["alpha_hit_5d"] is True)
     alpha_values = [float(record["alpha_5d_pct"]) for record in denominator_records]
+    warning = "Displayed from existing evaluation log."
+    if has_superseded_records:
+        warning = "Displayed from latest valid evaluation record per key; superseded records exist."
     return AlphaEvaluationViewModel(
         actionable_candidate_count=actionable_count,
         complete_followup_count=len(denominator_records),
         alpha_hit_rate_5d_vs_market=hits / len(denominator_records),
         average_alpha_5d_pct=sum(alpha_values) / len(alpha_values),
         source=str(evaluation_log_path),
-        warning="Displayed from existing evaluation log only; CSV calculation remains Session H scope.",
+        warning=warning,
     )
+
+
+def latest_evaluation_records(records: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], bool]:
+    latest_by_key: dict[tuple[Any, Any, Any], dict[str, Any]] = {}
+    has_superseded_records = False
+    for index, record in enumerate(sorted(records, key=lambda item: str(item.get("timestamp", "")))):
+        key = (record.get("stock_id"), record.get("advice_date"), record.get("input_context_hash"))
+        if key == (None, None, None):
+            key = ("unkeyed_evaluation_record", index, None)
+        if key in latest_by_key:
+            has_superseded_records = True
+        latest_by_key[key] = record
+    return list(latest_by_key.values()), has_superseded_records
 
 
 def read_existing_evaluation_records(evaluation_log_path: str | Path) -> list[dict[str, Any]]:
@@ -295,6 +311,31 @@ def read_existing_evaluation_records(evaluation_log_path: str | Path) -> list[di
         if isinstance(record, dict):
             records.append(record)
     return records
+
+
+def persist_uploaded_followup_csv(uploaded_file: Any, cache_dir: str | Path | None = None) -> str:
+    content = uploaded_file.getvalue() if hasattr(uploaded_file, "getvalue") else uploaded_file.read()
+    target_dir = Path(cache_dir) if cache_dir else Path(tempfile.gettempdir()) / "ai_advisor_followups"
+    target_dir.mkdir(parents=True, exist_ok=True)
+    digest = sha256(content).hexdigest()[:12]
+    safe_name = Path(getattr(uploaded_file, "name", "followup.csv")).name
+    target_path = target_dir / f"{digest}_{safe_name}"
+    target_path.write_bytes(content)
+    return str(target_path)
+
+
+def process_followup_csv_upload(
+    uploaded_file: Any,
+    advice_log_path: str = DEFAULT_CONFIG.log_path,
+    evaluation_log_path: str = DEFAULT_CONFIG.evaluation_log_path,
+    cache_dir: str | Path | None = None,
+) -> AlphaSummary:
+    followup_csv_path = persist_uploaded_followup_csv(uploaded_file, cache_dir=cache_dir)
+    return update_followup_returns(
+        advice_log_path=advice_log_path,
+        followup_csv_path=followup_csv_path,
+        evaluation_log_path=evaluation_log_path,
+    )
 
 
 def render_app(streamlit_module: Any | None = None) -> None:
@@ -418,6 +459,19 @@ def _render_stock_detail(ui: Any, ranked_advices: list[RankedStockAdvice]) -> No
 
 def _render_alpha_evaluation(ui: Any, ranked_advices: list[RankedStockAdvice], followup_csv: Any | None) -> None:
     ui.subheader("Alpha Evaluation")
+    if followup_csv is not None:
+        if ui.button("Process follow-up CSV"):
+            try:
+                summary = process_followup_csv_upload(followup_csv)
+            except Exception as exc:
+                ui.error(str(exc))
+            else:
+                ui.success(f"Appended {summary.appended_evaluation_count} follow-up evaluation records.")
+                for warning in summary.warnings:
+                    ui.warning(warning)
+        else:
+            ui.info("CSV ready. Process it to append follow-up evaluations to ai_advice_evaluation.jsonl.")
+
     view_model = alpha_evaluation_view_model(ranked_advices)
     cols = ui.columns(4)
     cols[0].metric("actionable candidate count", view_model.actionable_candidate_count)
@@ -431,8 +485,6 @@ def _render_alpha_evaluation(ui: Any, ranked_advices: list[RankedStockAdvice], f
     cols[2].metric("alpha hit rate", hit_rate)
     cols[3].metric("average alpha_5d_pct", avg_alpha)
     ui.info(view_model.warning or f"source: {view_model.source}")
-    if followup_csv is not None:
-        ui.warning("CSV received but not processed in Session G; follow-up calculation is reserved for Session H.")
 
 
 def main() -> None:

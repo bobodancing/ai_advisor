@@ -3,6 +3,8 @@
 from ai_advisor.batch_engine import generate_stock_batch_advice, rank_stock_advices, update_followup_returns
 from ai_advisor.guardrails import apply_balanced_guardrails
 from ai_advisor.schemas import (
+    AlphaSummary,
+    EvaluationLogEntry,
     GuardedAdviceOutput,
     RankedStockAdvice,
     StockAdviceContext,
@@ -10,6 +12,8 @@ from ai_advisor.schemas import (
 )
 
 __all__ = [
+    "AlphaSummary",
+    "EvaluationLogEntry",
     "GuardedAdviceOutput",
     "RankedStockAdvice",
     "StockAdviceContext",
