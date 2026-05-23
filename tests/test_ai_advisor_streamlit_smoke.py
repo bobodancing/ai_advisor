@@ -93,6 +93,8 @@ def test_alpha_evaluation_view_uses_placeholder_without_complete_followup_record
     assert view_model.alpha_hit_rate_5d_vs_market is None
     assert view_model.average_alpha_5d_pct is None
     assert "Session H" in (view_model.warning or "")
+    assert "current loaded batch" in app.ALPHA_SCOPE_NOTE
+    assert "existing evaluation log" in app.ALPHA_SCOPE_NOTE
 
 
 def test_alpha_evaluation_view_can_read_existing_evaluation_stub(tmp_path: Path) -> None:

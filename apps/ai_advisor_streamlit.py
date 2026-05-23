@@ -25,6 +25,10 @@ from ai_advisor.schemas import AlphaSummary, GuardedAdviceOutput, RankedStockAdv
 
 
 SAFETY_NOTICE = "交易決策輔助，不是保證獲利或下單指令。"
+ALPHA_SCOPE_NOTE = (
+    "Scope: actionable candidate count uses the current loaded batch; "
+    "follow-up metrics use latest records from the existing evaluation log."
+)
 MODE_FAKE = "fake/demo"
 MODE_REAL = "real LLM"
 REAL_MODE_GUARD_ONLY_MESSAGE = "Real LLM execution is guard-only in Session G and cannot submit yet."
@@ -459,6 +463,7 @@ def _render_stock_detail(ui: Any, ranked_advices: list[RankedStockAdvice]) -> No
 
 def _render_alpha_evaluation(ui: Any, ranked_advices: list[RankedStockAdvice], followup_csv: Any | None) -> None:
     ui.subheader("Alpha Evaluation")
+    ui.caption(ALPHA_SCOPE_NOTE)
     if followup_csv is not None:
         if ui.button("Process follow-up CSV"):
             try:
