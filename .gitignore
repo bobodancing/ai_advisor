@@ -1,0 +1,6 @@
+﻿.env
+.env.*
+secrets.json
+reports/ai_advice/*.jsonl
+__pycache__/
+.pytest_cache/

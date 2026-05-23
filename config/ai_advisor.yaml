@@ -1,0 +1,29 @@
+﻿provider: openai
+model: ${LLM_MODEL:-gpt-5.5}
+reasoning_effort: ${LLM_REASONING_EFFORT:-medium}
+temperature: 0.2
+max_output_tokens: 3000
+prompt_version: v1.2
+strategy_profile: balanced
+
+paths:
+  prompt_dir: config/prompts
+  output_dir: reports/ai_advice
+  log_path: reports/ai_advice/ai_advice_log.jsonl
+  evaluation_log_path: reports/ai_advice/ai_advice_evaluation.jsonl
+
+batch:
+  min_supported_stocks: 20
+  max_stocks_per_run: 50
+  max_llm_calls_per_run: 50
+
+evaluation:
+  alpha_horizon_days: 5
+  horizon_type: trading_days
+  default_benchmark: TAIEX
+
+guardrails:
+  min_rr_for_small_probe: 1.5
+  min_rr_for_grade_a: 2.0
+  max_confidence_when_data_missing: 60
+  max_confidence_when_guardrail_downgraded: 70

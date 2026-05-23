@@ -1,0 +1,38 @@
+{
+    "date":  "2026-05-23",
+    "market_type":  "otc",
+    "benchmark_symbol":  "OTC",
+    "stock":  {
+                  "stock_id":  "3016",
+                  "name":  "Stock 3016",
+                  "close":  116,
+                  "change_pct":  3,
+                  "volume_ratio_20d":  1.3599999999999999
+              },
+    "market_regime":  {
+                          "risk_state":  "risk_on"
+                      },
+    "theme":  {
+                  "name":  "demo_theme",
+                  "rank":  1,
+                  "score":  86,
+                  "lifecycle":  "main_uptrend"
+              },
+    "leader_status":  {
+                          "leader_rank":  "leader_1"
+                      },
+    "technical":  {
+                      "position":  "pullback_to_ma10_and_rebound",
+                      "is_overheated":  false,
+                      "is_limit_up":  false
+                  },
+    "risk":  {
+                 "invalid_level":  111,
+                 "nearest_support":  113,
+                 "planned_target":  131,
+                 "risk_reward_ratio":  1.6
+             },
+    "data_source_notes":  [
+
+                          ]
+}

@@ -1,0 +1,38 @@
+{
+    "date":  "2026-05-23",
+    "market_type":  "listed",
+    "benchmark_symbol":  "TAIEX",
+    "stock":  {
+                  "stock_id":  "3006",
+                  "name":  "Stock 3006",
+                  "close":  106,
+                  "change_pct":  2,
+                  "volume_ratio_20d":  1.26
+              },
+    "market_regime":  {
+                          "risk_state":  "risk_on"
+                      },
+    "theme":  {
+                  "name":  "demo_theme",
+                  "rank":  1,
+                  "score":  86,
+                  "lifecycle":  "main_uptrend"
+              },
+    "leader_status":  {
+                          "leader_rank":  "leader_1"
+                      },
+    "technical":  {
+                      "position":  "pullback_to_ma10_and_rebound",
+                      "is_overheated":  false,
+                      "is_limit_up":  false
+                  },
+    "risk":  {
+                 "invalid_level":  101,
+                 "nearest_support":  103,
+                 "planned_target":  121,
+                 "risk_reward_ratio":  2.1
+             },
+    "data_source_notes":  [
+
+                          ]
+}
