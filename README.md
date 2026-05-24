@@ -6,6 +6,11 @@ The module loads structured `StockAdviceContext` JSON files, generates determini
 
 It is not an autonomous trading bot, public advisory service, market data downloader, or real-time monitoring system.
 
+## Release / Pilot
+
+- Release notes: [docs/release_notes_v1_2_1.md](docs/release_notes_v1_2_1.md)
+- First pilot runbook: [docs/first_pilot_runbook.md](docs/first_pilot_runbook.md)
+
 ## Install
 
 Use Python 3.11 or a compatible local Python environment.
