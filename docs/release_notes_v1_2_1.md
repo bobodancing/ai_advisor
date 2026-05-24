@@ -82,3 +82,4 @@ Log hygiene:
 
 - GitHub Actions reports a Node.js 20 actions deprecation warning for the current action versions. This is Low risk and does not block v1.2.1.
 - Follow-up CSV browser upload was not manually verified in the release hardening browser pass; automated evaluator and Streamlit smoke tests cover the follow-up CSV path.
+- Append-only advice logs may contain duplicate snapshots when Streamlit is rerun; official pilots should report both raw JSONL line count and unique context count.

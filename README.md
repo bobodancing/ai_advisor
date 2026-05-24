@@ -11,6 +11,8 @@ It is not an autonomous trading bot, public advisory service, market data downlo
 - Release notes: [docs/release_notes_v1_2_1.md](docs/release_notes_v1_2_1.md)
 - First pilot runbook: [docs/first_pilot_runbook.md](docs/first_pilot_runbook.md)
 
+The first official pilot should start from a clean or archived `reports/ai_advice` state.
+
 ## Install
 
 Use Python 3.11 or a compatible local Python environment.

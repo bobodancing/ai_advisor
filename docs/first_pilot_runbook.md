@@ -49,12 +49,30 @@ Expected tracked file:
 reports/ai_advice/.gitkeep
 ```
 
-## 2. Start Streamlit
+## 2. Dry Run vs Official Pilot
+
+Treat fixture checks, automation-assisted browser runs, and operator rehearsal runs as dry runs. Dry runs may append valid snapshots to the append-only advice log, and that is expected behavior.
+
+For the first official pilot, start from a clean `reports/ai_advice` state or from a state where previous pilot artifacts have already been archived outside the repository. If `reports/ai_advice/ai_advice_log.jsonl` already exists, do not delete it casually. Manually back it up or move it to a private archive outside the Git repository before starting the official pilot.
+
+The committed repository should still track only:
+
+```text
+reports/ai_advice/.gitkeep
+```
+
+## 3. Start Streamlit
 
 From the repository root:
 
 ```bash
 python -m streamlit run apps/ai_advisor_streamlit.py
+```
+
+For operator-led pilots, this equivalent launch command avoids the first-run browser/email prompt:
+
+```bash
+python -m streamlit run apps/ai_advisor_streamlit.py --server.headless true --browser.gatherUsageStats false
 ```
 
 Open the local URL printed by Streamlit, usually:
@@ -65,7 +83,7 @@ http://localhost:8501
 
 Confirm the safety notice is visible.
 
-## 3. Select Fake/Demo Mode
+## 4. Select Fake/Demo Mode
 
 In the sidebar:
 
@@ -75,7 +93,7 @@ In the sidebar:
 
 For v1.2.1, `real LLM` mode is guard-only. It can show API key status, estimated calls, and max-call blocking, but it must not execute a real LLM API call.
 
-## 4. Load Contexts
+## 5. Load Contexts
 
 For a fixture pilot:
 
@@ -96,7 +114,7 @@ For a real after-market pilot:
 4. Enter the real context folder path.
 5. Click `Run batch advice`.
 
-## 5. Check Batch Results
+## 6. Check Batch Results
 
 In `Batch Results`:
 
@@ -113,7 +131,7 @@ was_blocked == false
 
 5. Keep blocked rows visible during the first pilot so data quality and guardrail behavior are easy to audit.
 
-## 6. Inspect Stock Detail
+## 7. Inspect Stock Detail
 
 In `Stock Detail`:
 
@@ -125,7 +143,7 @@ In `Stock Detail`:
 
 Only use `final_advice` as the product recommendation. Raw advice is retained for auditability but is not the final user-facing recommendation.
 
-## 7. Retain Advice Logs
+## 8. Retain Advice Logs
 
 Advice snapshots are generated locally at:
 
@@ -142,7 +160,18 @@ Pilot handling rules:
 
 The alpha placeholder fields inside advice snapshots should remain `null` at advice creation time.
 
-## 8. Prepare Follow-Up CSV After 5 Trading Days
+## 9. Pilot Metrics Reporting
+
+Because advice logs are append-only, Streamlit reruns can create multiple snapshots for the same context. Official pilot notes should report both raw log volume and unique context volume:
+
+- `jsonl_line_count`: total non-empty lines in `reports/ai_advice/ai_advice_log.jsonl`.
+- `unique_context_count`: unique `stock_id + advice_date + input_context_hash` rows.
+- `duplicate_snapshot_count`: `jsonl_line_count - unique_context_count`.
+- `blocked_unique_count`: blocked rows counted after de-duplicating by `stock_id + advice_date + input_context_hash`.
+- `actionable_unique_candidate_count`: unique rows where `grade in ["A", "B"]`, `recommendation in ["wait_pullback", "small_probe"]`, and `was_blocked == false`.
+- `complete_followup_count`: actionable unique candidates with complete follow-up evaluation records.
+
+## 10. Prepare Follow-Up CSV After 5 Trading Days
 
 After the 5th trading day close, prepare a CSV with:
 
@@ -158,7 +187,7 @@ Rules:
 - v1.2.1 does not infer trading calendars.
 - Rows missing `benchmark_return_5d_pct` are excluded from the main alpha denominator and should be reviewed as data quality gaps.
 
-## 9. Import Follow-Up CSV
+## 11. Import Follow-Up CSV
 
 In Streamlit:
 
@@ -174,7 +203,7 @@ reports/ai_advice/ai_advice_evaluation.jsonl
 
 The evaluation step must not mutate `reports/ai_advice/ai_advice_log.jsonl`.
 
-## 10. Interpret Alpha Hit Rate
+## 12. Interpret Alpha Hit Rate
 
 Main metric:
 
@@ -191,22 +220,27 @@ Interpretation:
 - Blocked rows are excluded from actionable candidate evaluation.
 - A small sample is directional only; review trade quality and data quality together.
 
-## 11. Record Pilot Observations
+## 13. Record Pilot Observations
 
 After each pilot, record:
 
 - pilot date and advice date,
 - context folder used,
-- number of valid contexts loaded,
-- number of blocked rows,
-- actionable candidate count,
+- `jsonl_line_count`,
+- `unique_context_count`,
+- `duplicate_snapshot_count`,
+- `blocked_unique_count`,
+- `actionable_unique_candidate_count`,
+- `complete_followup_count`,
 - top candidates reviewed manually,
-- guardrail reasons that looked useful,
-- guardrail reasons that need PM review,
+- guardrail reasons the trader considered useful,
+- guardrail reasons the trader considered questionable or needing PM review,
 - any missing or suspicious context fields,
 - whether any candidate was manually traded,
 - follow-up CSV date after 5 trading days,
 - alpha hit rate and average `alpha_5d_pct`,
 - notes for Phase 2 only if they do not change v1.2 scope.
+
+The CODEX operator is a pilot scribe only. The operator should not decide whether a guardrail reason is useful, questionable, or trade-relevant; record the trader's judgment without turning it into a buy/sell recommendation.
 
 Keep Phase 2 ideas in `docs/phase2_backlog.md`; do not implement them during the v1.2 pilot.
