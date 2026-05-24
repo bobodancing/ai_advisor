@@ -4,7 +4,7 @@ Project: Market Data Scanner / Context Generator
 
 Roadmap owner: PM + Codex
 
-Status: Gate 0 resolved, M1 ready
+Status: Gate 0 resolved, M1 implemented
 
 Created: 2026-05-24
 
@@ -48,7 +48,7 @@ M1 may begin. The first implementation must use local raw official-format files 
 | Milestone | Deadline | Owner | Exit Criteria | Status |
 |---|---:|---|---|---|
 | M0 - Source Decision | 2026-05-24 | PM | `humanpending.md` decisions resolved and ADR updated | Done |
-| M1 - Local Raw Adapter | 2026-05-27 | Codex | local daily stock/benchmark files load into typed records; source-contract tests pass | Next |
+| M1 - Local Raw Adapter | 2026-05-27 | Codex | local daily stock/benchmark files load into typed records; source-contract tests pass | Done |
 | M2 - Indicators | 2026-05-29 | Codex | MA, volume ratio, relative strength, market regime tests pass | Planned |
 | M3 - Context Writer | 2026-06-02 | Codex | generated JSON validates as `StockAdviceContext`; theme/leader fallback tested | Planned |
 | M4 - Scanner Filter / Score | 2026-06-05 | Codex + PM | hard skip vs penalty rules tested; at least 20 fixture contexts generated | Planned |

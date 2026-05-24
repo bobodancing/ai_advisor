@@ -1,0 +1,41 @@
+[
+  {
+    "Date": "113/05/24",
+    "Code": "2330",
+    "Name": "台積電",
+    "TradeVolume": "45,678,901",
+    "TradeValue": "39,012,345,678",
+    "OpeningPrice": "850.00",
+    "HighestPrice": "872.00",
+    "LowestPrice": "848.00",
+    "ClosingPrice": "865.00",
+    "Change": "+15.00",
+    "Transaction": "42,001"
+  },
+  {
+    "Date": "2024-05-24",
+    "Code": "0050",
+    "Name": "元大台灣50 ETF",
+    "TradeVolume": "12,000,000",
+    "TradeValue": "1,800,000,000",
+    "OpeningPrice": "150.00",
+    "HighestPrice": "151.50",
+    "LowestPrice": "149.50",
+    "ClosingPrice": "151.00",
+    "Change": "+1.00",
+    "Transaction": "8,000"
+  },
+  {
+    "Date": "113年05月24日",
+    "Code": "2317",
+    "Name": "鴻海",
+    "TradeVolume": "20,000,000",
+    "TradeValue": "3,200,000,000",
+    "OpeningPrice": "160.00",
+    "HighestPrice": "162.00",
+    "LowestPrice": "158.50",
+    "ClosingPrice": "--",
+    "Change": "暫停交易",
+    "Transaction": "10,000"
+  }
+]

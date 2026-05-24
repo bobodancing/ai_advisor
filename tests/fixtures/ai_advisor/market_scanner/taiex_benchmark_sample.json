@@ -1,0 +1,17 @@
+[
+  {
+    "Date": "113/05/24",
+    "IndexName": "TAIEX",
+    "OpeningIndex": "21,500.00",
+    "HighestIndex": "21,600.00",
+    "LowestIndex": "21,450.00",
+    "ClosingIndex": "21,565.34",
+    "Change": "+45.12"
+  },
+  {
+    "Date": "113/05/24",
+    "IndexName": "OTC Index",
+    "ClosingIndex": "268.75",
+    "Change": "-0.83"
+  }
+]

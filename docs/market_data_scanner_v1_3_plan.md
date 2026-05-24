@@ -1,6 +1,6 @@
 # Market Data Scanner v1.3 Plan
 
-Status: Gate 0 resolved; M1 local raw adapter ready
+Status: Gate 0 resolved; M1 local raw adapter implemented
 Owner: PM + Codex  
 Purpose: solve the blocker where the trader has no CSV and no ready `StockAdviceContext` folder.
 

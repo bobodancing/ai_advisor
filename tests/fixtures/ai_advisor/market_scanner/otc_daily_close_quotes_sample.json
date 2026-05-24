@@ -1,0 +1,44 @@
+[
+  {
+    "Date": "2024/05/24",
+    "SecuritiesCompanyCode": "6488",
+    "CompanyName": "環球晶",
+    "Close": "530.00",
+    "Change": "-5.00",
+    "Open": "540.00",
+    "High": "542.00",
+    "Low": "528.00",
+    "TradingShares": "1,234,567",
+    "TransactionAmount": "654,321,000",
+    "TransactionNumber": "3,210",
+    "NextReferencePrice": "530.00",
+    "NextLimitUp": "583.00",
+    "NextLimitDown": "477.00"
+  },
+  {
+    "Date": "113/05/24",
+    "SecuritiesCompanyCode": "00679B",
+    "CompanyName": "元大美債20年",
+    "Close": "31.20",
+    "Change": "+0.10",
+    "Open": "31.10",
+    "High": "31.25",
+    "Low": "31.05",
+    "TradingShares": "9,876,543",
+    "TransactionAmount": "308,000,000",
+    "TransactionNumber": "2,001"
+  },
+  {
+    "Date": "113/05/24",
+    "SecuritiesCompanyCode": "8926",
+    "CompanyName": "台汽電",
+    "Close": "X0.00",
+    "Change": "除權息",
+    "Open": "50.00",
+    "High": "51.00",
+    "Low": "49.50",
+    "TradingShares": "456,789",
+    "TransactionAmount": "22,222,222",
+    "TransactionNumber": "333"
+  }
+]
