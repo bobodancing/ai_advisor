@@ -29,11 +29,13 @@ v1.2 的核心不是「AI 幫我解釋股票」，而是「批次找出值得明
 
 - Streamlit 批次個股篩選頁。
 - 載入多檔 `StockAdviceContext` JSON。
-- 使用 fake/demo mode 或 real LLM mode 產生個股交易建議。
+- 使用 fake/demo mode 產生穩定個股交易建議。
+- real LLM mode 在 v1.2 僅提供 API key 檢查、call estimate、max-call guard 與禁止送出保護；真實 API 執行延後到 Phase 2 / v1.3。
 - 以固定排序規則列出候選股。
 - 點選個股顯示完整交易計畫。
 - 寫入 JSONL log。
 - 匯入 follow-up CSV 後計算 5 個交易日 alpha hit rate。
+- Release hardening 補齊 CI、README、release UAT checklist。
 
 ### 2.2 Out of Scope
 
@@ -48,6 +50,7 @@ v1.2 的核心不是「AI 幫我解釋股票」，而是「批次找出值得明
 - 公開投顧服務
 - 多使用者權限
 - 多 provider 完整實作
+- real LLM API 真實呼叫 / provider integration
 
 ---
 
@@ -120,8 +123,8 @@ v1.2 省時間驗收標準：
 4. 使用者載入 stock context JSON。
 5. App 顯示本次 estimated LLM calls。
 6. 若超過 `max_llm_calls_per_run`，禁止送出。
-7. 點擊 `Generate Batch Advice`。
-8. 單檔失敗不影響整批；該 row 顯示 blocked/error。
+7. v1.2 release 版不送出真實 LLM API 呼叫，必須顯示 guard-only 狀態。
+8. 真實 LLM 執行若要實作，必須先升級 scope 到 Phase 2 / v1.3，並保留單檔失敗不影響整批的契約。
 
 ### 4.3 Follow-up Evaluation
 
@@ -172,6 +175,16 @@ tests/
 reports/
   ai_advice/
     .gitkeep
+
+docs/
+  phase2_backlog.md
+  release_uat_checklist.md
+
+.github/
+  workflows/
+    ci.yml
+
+README.md
 ```
 
 ---
@@ -784,6 +797,7 @@ pytest tests/test_ai_advisor_schemas.py tests/test_ai_advisor_guardrails.py test
 3. 支援 fake/demo mode 與 real LLM mode。
 4. 顯示 batch results、stock detail、alpha evaluation。
 5. 顯示 estimated LLM calls 與 max batch size。
+6. real LLM mode 在 v1.2 只做 guard-only，不執行真實 API 呼叫。
 
 驗收：
 
@@ -807,6 +821,23 @@ pytest tests/test_ai_advisor_streamlit_smoke.py
 pytest tests/test_ai_advisor_evaluator.py
 ```
 
+### Session I - Release Hardening
+
+任務：
+
+1. 建立 GitHub Actions CI：安裝 `requirements.txt`，執行 full relevant pytest set。
+2. 建立 `README.md`：安裝、啟動 Streamlit、fixture folder、fake/demo mode、real LLM guard-only、follow-up CSV、測試指令。
+3. 建立 `docs/release_uat_checklist.md`：手動驗收 batch flow、follow-up CSV、advice log immutable、evaluation log append-only。
+4. 實際跑一次 release hardening 測試並回報。
+5. 不整合 real LLM 真實呼叫；若發現需求，寫入 Phase 2 backlog。
+
+驗收：
+
+```bash
+python -m pip install -r requirements.txt
+pytest tests/test_ai_advisor_schemas.py tests/test_ai_advisor_guardrails.py tests/test_ai_advisor_batch.py tests/test_ai_advisor_evaluator.py tests/test_ai_advisor_streamlit_smoke.py
+```
+
 ---
 
 ## 19. Definition of Done
@@ -815,7 +846,7 @@ v1.2 完成最低標準：
 
 - Streamlit app 是主要入口。
 - 可使用 fake/demo mode 批次處理至少 20 檔 fixture。
-- real LLM mode 有 API key 檢查、LLM call estimate、max call guard。
+- real LLM mode 有 API key 檢查、LLM call estimate、max call guard；v1.2 不要求真實 API 執行。
 - 結果表可排序、篩選、點選個股詳情。
 - 單檔失敗不會中斷整批。
 - balanced guardrails 測試通過。
@@ -823,6 +854,9 @@ v1.2 完成最低標準：
 - JSONL log 包含 advice close、market type、benchmark、alpha 欄位。
 - 匯入 follow-up CSV 後能計算 5 個交易日 alpha hit rate。
 - `observe` 不計入 alpha hit rate 主分母。
+- GitHub Actions CI 會安裝依賴並執行 full relevant pytest set。
+- README 說明安裝、啟動、fixtures、fake/demo 與 real guard-only 模式、follow-up CSV、測試方式。
+- release UAT checklist 記錄實際資料流程與 JSONL append-only / immutability 驗收點。
 - 專案內沒有 secrets。
 
 ---
@@ -838,6 +872,7 @@ Phase 2 才做：
 - 人工回饋 UI
 - 交易計畫版本比較
 - 多 provider 支援
+- real LLM API 真實執行與 provider integration
 
 ---
 

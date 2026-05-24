@@ -115,7 +115,7 @@ Allowed in v1.2:
 - Streamlit batch stock advice page.
 - Loading multiple `StockAdviceContext` JSON files.
 - fake/demo mode.
-- real LLM mode with API key check and max-call guard.
+- real LLM mode guard UI with API key check, call estimate, and max-call guard.
 - deterministic guardrails.
 - deterministic ranking.
 - row-level failure handling.
@@ -123,6 +123,9 @@ Allowed in v1.2:
 - separate follow-up evaluation JSONL logging.
 - follow-up CSV evaluation.
 - 5-trading-day alpha hit rate.
+- release hardening CI that installs `requirements.txt` and runs the relevant pytest suite.
+- README usage documentation for install, Streamlit launch, fixtures, fake/demo vs real guard mode, tests, and follow-up CSV.
+- release UAT checklist for fixture batch flow and log integrity.
 
 Not allowed in v1.2 unless explicitly requested:
 
@@ -139,6 +142,7 @@ Not allowed in v1.2 unless explicitly requested:
 - vector databases.
 - agent orchestration frameworks.
 - complete multi-provider abstraction.
+- real LLM API execution / provider integration; v1.2 real mode is guard-only until explicitly promoted to Phase 2 or v1.3.
 - large speculative architecture rewrites.
 
 If a useful idea belongs to Phase 2, document it only in `docs/phase2_backlog.md`. Do not implement it inside v1.2.
@@ -326,6 +330,13 @@ reports/
 
 docs/
   phase2_backlog.md
+  release_uat_checklist.md
+
+.github/
+  workflows/
+    ci.yml
+
+README.md
 ```
 
 Do not scatter `ai_advisor` logic across unrelated folders.
@@ -500,6 +511,9 @@ Real LLM mode must:
 - convert per-stock failures into blocked/error rows.
 
 Do not allow a missing API key to crash the app.
+
+For v1.2 release hardening, real LLM mode remains guard-only unless the user explicitly changes scope.
+Do not wire real API execution in v1.2. Record true provider execution in `docs/phase2_backlog.md`.
 
 ---
 
@@ -1211,6 +1225,24 @@ pytest tests/test_ai_advisor_schemas.py \
 
 If Streamlit cannot be manually verified in the current environment, state that clearly.
 
+### Release Hardening
+
+```bash
+python -m pip install -r requirements.txt
+pytest tests/test_ai_advisor_schemas.py \
+       tests/test_ai_advisor_guardrails.py \
+       tests/test_ai_advisor_batch.py \
+       tests/test_ai_advisor_evaluator.py \
+       tests/test_ai_advisor_streamlit_smoke.py
+```
+
+Release hardening must also add or verify:
+
+- `.github/workflows/ci.yml` installs from `requirements.txt` and runs the full relevant pytest set.
+- `README.md` explains install, launch, fixture usage, fake/demo mode, real LLM guard-only status, follow-up CSV, and test commands.
+- `docs/release_uat_checklist.md` documents manual fixture batch flow and JSONL log integrity checks.
+- Real LLM execution remains deferred to Phase 2 / v1.3 unless explicitly authorized.
+
 ---
 
 ## 17. Reporting Format for Codex
@@ -1312,7 +1344,7 @@ v1.2 is done only when:
 
 - Streamlit app is the primary entry point.
 - fake/demo mode can batch process at least 20 fixture stocks.
-- real LLM mode has API key check, LLM call estimate, and max-call guard.
+- real LLM mode has API key check, LLM call estimate, and max-call guard; real API execution is not required for v1.2.
 - results table supports sorting/filtering and row detail inspection.
 - single-stock failures do not interrupt the batch.
 - balanced guardrails pass tests.
@@ -1321,6 +1353,9 @@ v1.2 is done only when:
 - follow-up evaluation log contains computed 5-day return, benchmark return, alpha, denominator inclusion, and exclusion reason.
 - follow-up CSV import calculates 5-trading-day alpha hit rate.
 - `observe` is excluded from main alpha denominator.
+- GitHub Actions CI exists and runs dependency install plus the relevant pytest suite.
+- `README.md` gives a new-session operator enough instructions to install dependencies, run Streamlit, use fixtures, run tests, and understand fake/demo vs real guard mode.
+- `docs/release_uat_checklist.md` exists and covers fixture batch flow, follow-up CSV, advice log immutability, and evaluation log append-only behavior.
 - secrets are not committed.
 - relevant tests are executed and reported.
 

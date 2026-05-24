@@ -12,7 +12,7 @@ Target MVP release: 2026-06-12
 
 ## 1. Roadmap 原則
 
-v1.2 只交付 `Stock Trade Advice Batch`。任何 `Daily AI Advice`、`Risk Review`、行情下載、交易日曆推斷、自動下單、資料庫、auth、多 provider，都不進 v1.2。
+v1.2 只交付 `Stock Trade Advice Batch`。任何 `Daily AI Advice`、`Risk Review`、行情下載、交易日曆推斷、自動下單、資料庫、auth、多 provider、real LLM API 真實執行，都不進 v1.2。
 
 交付順序固定：
 
@@ -32,11 +32,11 @@ Session F: Stock Batch Core
 | Milestone | Deadline | Owner | Exit Criteria | Status |
 |---|---:|---|---|---|
 | M0 - Kickoff Readiness | 2026-05-24 | PM + Codex | 新 session 讀完 `AGENTS.md` 與 v1.2 spec，確認只做 Session F | Not started |
-| M1 - Session F Stock Batch Core | 2026-05-29 | Codex | schema、fake client、balanced guardrails、batch engine、ranking、immutable advice log 完成且測試通過 | Not started |
-| M2 - Session F Review / Fix Buffer | 2026-05-31 | PM + Codex | 修完 M1 review findings，無 High/Medium blocker | Not started |
-| M3 - Session G Streamlit MVP | 2026-06-05 | Codex | Streamlit 可載入 20+ fixtures、fake/demo mode、real LLM guard、結果表、詳情頁 | Not started |
-| M4 - Session H Follow-up Evaluation | 2026-06-09 | Codex | follow-up CSV 讀取、evaluation JSONL、5 trading day alpha hit rate 完成 | Not started |
-| M5 - Release Hardening | 2026-06-11 | PM + Codex | 完整相關測試通過，文件與 DoD 對齊，無 scope creep | Not started |
+| M1 - Session F Stock Batch Core | 2026-05-29 | Codex | schema、fake client、balanced guardrails、batch engine、ranking、immutable advice log 完成且測試通過 | Done |
+| M2 - Session F Review / Fix Buffer | 2026-05-31 | PM + Codex | 修完 M1 review findings，無 High/Medium blocker | Done |
+| M3 - Session G Streamlit MVP | 2026-06-05 | Codex | Streamlit 可載入 20+ fixtures、fake/demo mode、real LLM guard、結果表、詳情頁 | Done |
+| M4 - Session H Follow-up Evaluation | 2026-06-09 | Codex | follow-up CSV 讀取、evaluation JSONL、5 trading day alpha hit rate 完成 | Done |
+| M5 - Release Hardening | 2026-06-11 | PM + Codex | CI、README、release UAT checklist、完整相關測試通過，文件與 DoD 對齊，無 scope creep | Next |
 | M6 - v1.2 MVP Go/No-Go | 2026-06-12 | PM | 決定可否進入個人盤後試用 | Not started |
 
 ---
@@ -99,6 +99,7 @@ Deadline: 2026-06-05
 
 - fake/demo mode 不需要 secrets。
 - real LLM mode 缺 `OPENAI_API_KEY` 不可 crash。
+- real LLM mode 在 v1.2 是 guard-only；不可在 release hardening 順手接真實 API 呼叫。
 - 超過 `max_llm_calls_per_run` 必須禁止送出。
 - 頁面顯示免責文字：`交易決策輔助，不是保證獲利或下單指令。`
 - blocked/error rows 可顯示，但不可中斷整批。
@@ -168,6 +169,7 @@ Deadline: 2026-06-11
 ### Required Checks
 
 ```bash
+python -m pip install -r requirements.txt
 pytest tests/test_ai_advisor_schemas.py \
        tests/test_ai_advisor_guardrails.py \
        tests/test_ai_advisor_batch.py \
@@ -175,14 +177,24 @@ pytest tests/test_ai_advisor_schemas.py \
        tests/test_ai_advisor_streamlit_smoke.py
 ```
 
+### Required Deliverables
+
+- `.github/workflows/ci.yml`：GitHub Actions 安裝 `requirements.txt`，執行 full relevant pytest set。
+- `README.md`：說明安裝依賴、啟動 Streamlit、使用 fixture folder、fake/demo mode、real LLM guard-only 狀態、follow-up CSV、測試指令。
+- `docs/release_uat_checklist.md`：列出手動 batch flow、follow-up CSV、advice log immutable、evaluation log append-only 驗收步驟。
+- Release hardening report：包含 `[executed]` 測試、`[inspected]` 文件與 UAT 檢查、`[assumed]` 未驗證項目。
+
 ### Release Review Checklist
 
 - `AGENTS.md` rules obeyed。
 - v1.2 spec DoD met。
 - No secrets committed。
+- GitHub Actions CI exists and targets the relevant pytest suite。
+- README exists and can guide a fresh construction session。
+- Release UAT checklist exists。
 - Streamlit app is primary entry point。
 - fake/demo mode can process at least 20 fixture stocks。
-- real LLM mode has API key check and max-call guard。
+- real LLM mode has API key check and max-call guard; true execution remains deferred。
 - Results table supports ranking/filter/detail inspection。
 - Single-stock failures do not interrupt batch。
 - Advice snapshot log immutable。
@@ -199,6 +211,8 @@ Deadline: 2026-06-12
 ### Go Criteria
 
 - All release hardening checks pass。
+- CI and README are present。
+- Release UAT checklist has no open High/Medium issue。
 - No High or Medium product blocker remains。
 - PM can run fake/demo mode on 20+ fixtures。
 - PM can inspect one stock detail from the table。
@@ -212,6 +226,8 @@ Deadline: 2026-06-12
 - Follow-up alpha denominator includes `observe`。
 - Streamlit cannot load fixture folder。
 - Batch failure in one stock stops the entire run。
+- Release hardening implements real LLM API execution without explicit scope approval。
+- No CI or README exists。
 
 ---
 
@@ -232,6 +248,7 @@ Known Phase 2 candidates:
 - 人工回饋 UI
 - 交易計畫版本比較
 - 多 provider 支援
+- real LLM API 真實執行與 provider integration
 
 Do not implement these before v1.2 Go/No-Go.
 
@@ -244,10 +261,12 @@ As of 2026-05-23:
 - Product spec v1.2 exists。
 - `AGENTS.md` is approved for implementation governance。
 - Roadmap is created。
-- Implementation has not started。
+- Session F / G / H have passed PM review based on reported implementation and tests。
+- Next work is Release Hardening: CI, README, release UAT checklist, and final verification。
+- Real LLM execution remains Phase 2 / v1.3 and must not be implemented during hardening.
 
 Next action:
 
 ```text
-Open a new Codex session and request Session F - Stock Batch Core only.
+Open a new Codex session and request Release Hardening only.
 ```
