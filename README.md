@@ -8,7 +8,7 @@ It is not an autonomous trading bot, public advisory service, market data downlo
 
 ## Release / Pilot
 
-- Release notes: [docs/release_notes_v1_2_1.md](docs/release_notes_v1_2_1.md)
+- Release notes: [docs/release_notes_v1_2_3.md](docs/release_notes_v1_2_3.md)
 - First pilot runbook: [docs/first_pilot_runbook.md](docs/first_pilot_runbook.md)
 
 The first official pilot should start from a clean or archived `reports/ai_advice` state.
@@ -49,6 +49,14 @@ In the Streamlit sidebar:
 4. Keep `max batch size` at 20 or higher.
 5. Click `Run batch advice`.
 6. Review `Batch Results`, select a stock under `Stock Detail`, and check `Alpha Evaluation`.
+
+## No Context Folder Yet?
+
+AI Advisor v1.2.x needs `StockAdviceContext` JSON files. It does not download market data by itself.
+
+- If you have an after-market CSV, see the optional Scanner Lite plan: [docs/scanner_lite_context_builder_plan.md](docs/scanner_lite_context_builder_plan.md).
+- If you have no CSV and need the system to obtain market data, that is a Phase 2 / v1.3 Market Data Scanner task: [docs/market_data_scanner_v1_3_plan.md](docs/market_data_scanner_v1_3_plan.md).
+- v1.3 scanner roadmap: [docs/ai_advisor_v1_3_market_scanner_roadmap.md](docs/ai_advisor_v1_3_market_scanner_roadmap.md).
 
 ## Fake/Demo Mode
 

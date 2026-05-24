@@ -36,6 +36,7 @@ v1.2 的核心不是「AI 幫我解釋股票」，而是「批次找出值得明
 - 寫入 JSONL log。
 - 匯入 follow-up CSV 後計算 5 個交易日 alpha hit rate。
 - Release hardening 補齊 CI、README、release UAT checklist。
+- 若使用者已有盤後 CSV，v1.2.x pilot support 可另行規劃 Scanner Lite / Context Builder，把 CSV 轉成 `StockAdviceContext` JSON。若使用者沒有 CSV 或 context，必須規劃 Phase 2 / v1.3 Market Data Scanner。
 
 ### 2.2 Out of Scope
 
@@ -44,6 +45,7 @@ v1.2 的核心不是「AI 幫我解釋股票」，而是「批次找出值得明
 - `Daily AI Advice`
 - `Risk Review`
 - 行情資料下載
+- 全市場自動 scanner / crawler
 - Markdown 解析
 - 自動下單
 - 即時盤中追蹤
@@ -178,7 +180,12 @@ reports/
 
 docs/
   phase2_backlog.md
+  ai_advisor_v1_3_market_scanner_roadmap.md
+  market_data_source_decision.md
+  market_data_scanner_risk_register.md
   release_uat_checklist.md
+  scanner_lite_context_builder_plan.md
+  market_data_scanner_v1_3_plan.md
 
 .github/
   workflows/
@@ -247,6 +254,14 @@ reports/ai_advice/*.jsonl
 ## 7. StockAdviceContext
 
 所有 context 必須是 UTF-8 JSON。第一版不解析 Markdown。
+
+若使用者沒有現成 context folder，但已有盤後 CSV，v1.2.x 可另行規劃 Scanner Lite / Context Builder 作為 pilot 支援工具。它只接受使用者提供的盤後 CSV，依固定規則篩選並輸出 `StockAdviceContext` JSON folder。
+
+Scanner Lite 不是行情下載器，也不是自動技術分析器。它不得自行推論不存在的欄位，不得改變既有 guardrails、ranking、logging、benchmark mapping 或 alpha denominator。
+
+詳細規格以 `docs/scanner_lite_context_builder_plan.md` 為準。
+
+若使用者連盤後 CSV 都沒有，真正需要的是 Phase 2 / v1.3 Market Data Scanner。該模組需要讀取市場資料、計算技術與風險欄位、輸出 context folder，且必須獨立規劃與審查。詳細規格以 `docs/market_data_scanner_v1_3_plan.md` 為準。
 
 ### 7.1 Required Fields
 

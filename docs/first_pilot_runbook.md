@@ -1,6 +1,6 @@
-# AI Advisor v1.2.1 First Pilot Runbook
+# AI Advisor v1.2.3 First Pilot Runbook
 
-This runbook is for the first personal after-market pilot of AI Advisor v1.2.1.
+This runbook is for the first personal after-market pilot of AI Advisor v1.2.3.
 
 Safety reminder:
 
@@ -16,13 +16,14 @@ Use the system to organize candidate review and later evaluate 5-trading-day alp
 
 ```bash
 git status --short --branch
-git show --no-patch --format="%H %D %s" v1.2.1^{}
+git rev-parse "v1.2.3^{commit}"
+git show --no-patch --format="%H %D %s" "v1.2.3^{commit}"
 ```
 
 Expected release commit:
 
 ```text
-93625075ba0b502f4fe809cbf1ecd348c9097146
+23aa0d7bed8ec7706fd02aa6e6fa423042694817
 ```
 
 2. Install dependencies:
@@ -91,7 +92,7 @@ In the sidebar:
 2. Keep `show blocked rows` enabled for the first review pass.
 3. Keep `max batch size` at `20` or higher.
 
-For v1.2.1, `real LLM` mode is guard-only. It can show API key status, estimated calls, and max-call blocking, but it must not execute a real LLM API call.
+For v1.2.3, `real LLM` mode is guard-only. It can show API key status, estimated calls, and max-call blocking, but it must not execute a real LLM API call.
 
 ## 5. Load Contexts
 
@@ -113,6 +114,13 @@ For a real after-market pilot:
 3. Choose `folder path`.
 4. Enter the real context folder path.
 5. Click `Run batch advice`.
+
+If you do not have a context folder yet:
+
+- If you have an after-market CSV, use the optional Scanner Lite / Context Builder plan in `docs/scanner_lite_context_builder_plan.md`.
+- If you do not have CSV either and need the system to obtain market data, stop the pilot and plan the Phase 2 / v1.3 Market Data Scanner in `docs/market_data_scanner_v1_3_plan.md`.
+
+Do not start an official pilot by fabricating context values.
 
 ## 6. Check Batch Results
 
@@ -184,7 +192,7 @@ Rules:
 
 - `close_5d` is the stock close on the 5th trading day after advice.
 - `benchmark_return_5d_pct` must already be calculated versus the correct market benchmark.
-- v1.2.1 does not infer trading calendars.
+- v1.2.3 does not infer trading calendars.
 - Rows missing `benchmark_return_5d_pct` are excluded from the main alpha denominator and should be reviewed as data quality gaps.
 
 ## 11. Import Follow-Up CSV

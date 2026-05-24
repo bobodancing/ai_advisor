@@ -132,6 +132,7 @@ Not allowed in v1.2 unless explicitly requested:
 - `Daily AI Advice`.
 - `Risk Review`.
 - market data downloading.
+- full-market scanning that downloads or infers missing market data.
 - trading calendar inference.
 - intraday live tracking.
 - auto order execution.
@@ -330,6 +331,11 @@ reports/
 
 docs/
   phase2_backlog.md
+  ai_advisor_v1_3_market_scanner_roadmap.md
+  market_data_source_decision.md
+  market_data_scanner_risk_register.md
+  market_data_scanner_v1_3_plan.md
+  scanner_lite_context_builder_plan.md
   release_uat_checklist.md
 
 .github/
@@ -394,6 +400,34 @@ data_quality_warnings += ["market_type missing or unknown; default benchmark_sym
 Exception: if a valid `benchmark_symbol` is explicitly provided (`TAIEX` or `OTC`), preserve it and still warn that `market_type` is unknown.
 
 This behavior must be deterministic and tested.
+
+---
+
+### D1.1 — Context Generation Boundary
+
+If the user has no `StockAdviceContext` folder, do not fabricate context data.
+
+There are two separate upstream paths:
+
+```text
+user already has an after-market CSV -> optional Scanner Lite / CSV Context Builder
+user has no CSV or context data      -> Market Data Scanner, Phase 2 / v1.3
+```
+
+Scanner Lite may only convert a user-provided CSV into `StockAdviceContext` JSON. It must not download market data or infer missing market facts. Canonical optional plan: `docs/scanner_lite_context_builder_plan.md`.
+
+Market Data Scanner is a larger Phase 2 / v1.3 product. It may download or ingest official after-market market data, calculate deterministic technical/risk fields, and generate context JSON. It must be designed and reviewed separately before implementation.
+
+Canonical v1.3 planning docs:
+
+```text
+docs/market_data_scanner_v1_3_plan.md
+docs/ai_advisor_v1_3_market_scanner_roadmap.md
+docs/market_data_source_decision.md
+docs/market_data_scanner_risk_register.md
+```
+
+Neither path may change advice guardrails, fixed ranking, append-only logging, benchmark mapping, or alpha denominator semantics.
 
 ---
 
