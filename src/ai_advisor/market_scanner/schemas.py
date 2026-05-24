@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 ScannerMarketType = Literal["listed", "otc"]
 ScannerBenchmarkSymbol = Literal["TAIEX", "OTC"]
 InstrumentClassification = Literal["common_stock_candidate", "non_common_stock", "unknown"]
+ScannerRiskState = Literal["risk_on", "neutral", "risk_off", "unknown"]
 
 
 class ScannerBaseModel(BaseModel):
@@ -80,3 +81,32 @@ class LocalRawMarketDataSnapshot(ScannerBaseModel):
     otc_stocks: RawStockLoadResult
     taiex_benchmark: RawBenchmarkLoadResult
     otc_benchmark: RawBenchmarkLoadResult
+
+
+class StockIndicatorSnapshot(ScannerBaseModel):
+    stock_id: str | None
+    market_type: ScannerMarketType | None
+    as_of_date: str | None
+    ma5: float | None = None
+    ma10: float | None = None
+    ma20: float | None = None
+    ma60: float | None = None
+    average_volume_20d: float | None = None
+    volume_ratio_20d: float | None = None
+    prior_20d_high: float | None = None
+    prior_20d_low: float | None = None
+    prior_60d_high: float | None = None
+    prior_60d_low: float | None = None
+    distance_from_ma20: float | None = None
+    relative_strength_20d_vs_benchmark: float | None = None
+    relative_strength_60d_vs_benchmark: float | None = None
+    warnings: list[str] = Field(default_factory=list)
+
+
+class BenchmarkRegimeSnapshot(ScannerBaseModel):
+    benchmark_symbol: ScannerBenchmarkSymbol | None
+    as_of_date: str | None
+    ma20: float | None = None
+    ma60: float | None = None
+    risk_state: ScannerRiskState = "unknown"
+    warnings: list[str] = Field(default_factory=list)

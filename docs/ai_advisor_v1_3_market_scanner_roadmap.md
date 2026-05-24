@@ -4,7 +4,7 @@ Project: Market Data Scanner / Context Generator
 
 Roadmap owner: PM + Codex
 
-Status: Gate 0 resolved, M1 implemented
+Status: Gate 0 resolved, M2 implemented
 
 Created: 2026-05-24
 
@@ -49,7 +49,7 @@ M1 may begin. The first implementation must use local raw official-format files 
 |---|---:|---|---|---|
 | M0 - Source Decision | 2026-05-24 | PM | `humanpending.md` decisions resolved and ADR updated | Done |
 | M1 - Local Raw Adapter | 2026-05-27 | Codex | local daily stock/benchmark files load into typed records; source-contract tests pass | Done |
-| M2 - Indicators | 2026-05-29 | Codex | MA, volume ratio, relative strength, market regime tests pass | Planned |
+| M2 - Indicators | 2026-05-29 | Codex | MA, volume ratio, relative strength, market regime tests pass | Done |
 | M3 - Context Writer | 2026-06-02 | Codex | generated JSON validates as `StockAdviceContext`; theme/leader fallback tested | Planned |
 | M4 - Scanner Filter / Score | 2026-06-05 | Codex + PM | hard skip vs penalty rules tested; at least 20 fixture contexts generated | Planned |
 | M5 - Streamlit Integration Check | 2026-06-07 | Codex | generated folder loads through existing v1.2 Streamlit flow | Planned |
@@ -88,4 +88,5 @@ pytest tests/test_ai_advisor_schemas.py \
 - scanner relies on LLM ranking,
 - downloader is implemented before source behavior is verified,
 - fewer than 20 contexts are produced without clear warning and skip/penalty summary,
+- scanner-only `risk_state = "unknown"` is written into v1.2 `StockAdviceContext.market_regime.risk_state`; insufficient regime data must skip or emit deterministic warning/block before context writing,
 - `theme.*` or `leader_status.*` fallback is not deterministic.

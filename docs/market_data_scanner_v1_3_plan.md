@@ -1,6 +1,6 @@
 # Market Data Scanner v1.3 Plan
 
-Status: Gate 0 resolved; M1 local raw adapter implemented
+Status: Gate 0 resolved; M2 indicators implemented
 Owner: PM + Codex  
 Purpose: solve the blocker where the trader has no CSV and no ready `StockAdviceContext` folder.
 
@@ -342,6 +342,8 @@ risk_off:
 Listed stocks use TAIEX. OTC stocks use OTC.
 
 Do not infer trading calendars beyond the downloaded daily series.
+
+M2 indicator logic may return scanner-only `risk_state = "unknown"` when benchmark data is insufficient. M3 context writing must not write that value into v1.2 `StockAdviceContext.market_regime.risk_state`; insufficient regime data must cause a deterministic skip or warning/block path instead.
 
 ---
 
