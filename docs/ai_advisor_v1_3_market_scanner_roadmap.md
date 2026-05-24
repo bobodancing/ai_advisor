@@ -4,7 +4,13 @@ Project: Market Data Scanner / Context Generator
 
 Roadmap owner: PM + Codex
 
-Status: draft, pending human-gated source decisions
+Status: Gate 0 resolved, M1 ready
+
+Created: 2026-05-24
+
+Target M1 start: 2026-05-25
+
+Target scanner integration check: 2026-06-07
 
 ---
 
@@ -26,33 +32,28 @@ It must not change advice guardrails, ranking, logging, benchmark mapping, alpha
 
 ## 2. Gate 0 - Human Decisions
 
-Before implementation:
+Resolved on 2026-05-24:
 
-- resolve `HP-001`: product direction data source,
-- resolve `HP-002`: first implementation adapter path,
-- record decisions in `docs/market_data_source_decision.md`,
-- keep risks in `docs/market_data_scanner_risk_register.md`.
+- `HP-001 = A`: product direction uses official TWSE / TPEx after-market public data.
+- `HP-002 = B`: first implementation starts with local raw market-data file adapter, then adds official downloader after source behavior is verified.
+- decisions are recorded in `docs/market_data_source_decision.md`.
+- risks are tracked in `docs/market_data_scanner_risk_register.md`.
 
-Recommended default:
-
-```text
-product direction: official TWSE / TPEx after-market public data
-first implementation: local raw market-data file adapter, then official downloader
-```
+M1 may begin. The first implementation must use local raw official-format files and source-contract fixtures. Do not start with a live downloader.
 
 ---
 
 ## 3. Milestones
 
-| Milestone | Owner | Exit Criteria |
-|---|---|---|
-| M0 - Source Decision | PM | `humanpending.md` decisions resolved and ADR updated |
-| M1 - Local Raw Adapter | Codex | local daily stock/benchmark files load into typed records; source-contract tests pass |
-| M2 - Indicators | Codex | MA, volume ratio, relative strength, market regime tests pass |
-| M3 - Context Writer | Codex | generated JSON validates as `StockAdviceContext`; theme/leader fallback tested |
-| M4 - Scanner Filter / Score | Codex + PM | hard skip vs penalty rules tested; at least 20 fixture contexts generated |
-| M5 - Streamlit Integration Check | Codex | generated folder loads through existing v1.2 Streamlit flow |
-| M6 - Official Downloader Spike | Codex | current TWSE / TPEx source behavior verified; no brittle scraping accepted |
+| Milestone | Deadline | Owner | Exit Criteria | Status |
+|---|---:|---|---|---|
+| M0 - Source Decision | 2026-05-24 | PM | `humanpending.md` decisions resolved and ADR updated | Done |
+| M1 - Local Raw Adapter | 2026-05-27 | Codex | local daily stock/benchmark files load into typed records; source-contract tests pass | Next |
+| M2 - Indicators | 2026-05-29 | Codex | MA, volume ratio, relative strength, market regime tests pass | Planned |
+| M3 - Context Writer | 2026-06-02 | Codex | generated JSON validates as `StockAdviceContext`; theme/leader fallback tested | Planned |
+| M4 - Scanner Filter / Score | 2026-06-05 | Codex + PM | hard skip vs penalty rules tested; at least 20 fixture contexts generated | Planned |
+| M5 - Streamlit Integration Check | 2026-06-07 | Codex | generated folder loads through existing v1.2 Streamlit flow | Planned |
+| M6 - Official Downloader Spike | 2026-06-12 | Codex | current TWSE / TPEx source behavior verified; no brittle scraping accepted | Planned |
 
 ---
 

@@ -1,6 +1,6 @@
 # Market Data Scanner v1.3 Plan
 
-Status: proposed Phase 2 / v1.3 task  
+Status: Gate 0 resolved; M1 local raw adapter ready
 Owner: PM + Codex  
 Purpose: solve the blocker where the trader has no CSV and no ready `StockAdviceContext` folder.
 
@@ -71,9 +71,22 @@ Not allowed in first scanner version:
 - changing alpha denominator,
 - changing benchmark mapping without PM approval.
 
-Exact market data source selection is human-gated. The implementation session must verify the current official source/API behavior before coding adapters.
+Market data source Gate 0 is resolved in `docs/market_data_source_decision.md`.
 
-Recommended default source policy:
+Resolved source policy:
+
+```text
+Long-term product direction:
+  official TWSE / TPEx after-market public data
+
+First implementation:
+  local raw market-data file adapter using official-format raw samples,
+  then official downloader after source behavior is verified
+```
+
+The implementation session must verify current official source/API behavior before coding live download adapters.
+
+Source policy:
 
 ```text
 Prefer official TWSE / TPEx after-market data where practical.
@@ -511,26 +524,16 @@ pytest tests/test_ai_advisor_schemas.py tests/test_ai_advisor_market_scanner.py 
 
 ---
 
-## 11. Human-Gated Decisions
+## 11. Gate 0 Source Decisions
 
-Before implementation, PM/user must resolve `humanpending.md` and record the decision in `docs/market_data_source_decision.md`.
+Resolved on 2026-05-24 and recorded in `humanpending.md` and `docs/market_data_source_decision.md`.
 
 ```text
 HP-001 product direction data source:
-  A. official TWSE / TPEx after-market public data
-  B. broker/vendor export
-  C. local raw market-data files only
-
-recommended default:
-  A
+  accepted A. official TWSE / TPEx after-market public data
 
 HP-002 first implementation adapter path:
-  A. official downloader first
-  B. local raw file adapter first, then downloader
-  C. manual CSV only
-
-recommended default:
-  B
+  accepted B. local raw file adapter first, then downloader
 ```
 
 The scanner must not begin with brittle scraping or paid-provider assumptions unless explicitly approved.
