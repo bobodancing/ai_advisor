@@ -286,6 +286,49 @@ Never say "done" when tests were not run. Say exactly what was and was not verif
 
 ---
 
+### E6 — Multi-Agent Resource Allocation
+
+The project may use multiple AI agents, but authority must stay aligned with model capability and product risk.
+
+Recommended roles:
+
+```text
+Supervisor agent
+  scope control, product governance, roadmap, review, Go/No-Go, and contract decisions
+
+Implementation Codex agent
+  core code changes, deterministic logic, tests, local commits, and integration fixes
+
+Auxiliary Copilot / smaller LLM agent
+  low-risk support tasks such as typo checks, checklist drafting, docs consistency checks,
+  temp/log/cache file scans, fixture draft review, and non-authoritative diff summaries
+```
+
+Auxiliary agents must not be the final authority for:
+
+- schema semantics,
+- guardrail thresholds,
+- ranking order,
+- logging or evaluation denominator rules,
+- benchmark mapping,
+- risk/reward construction,
+- `market_scan` fallback semantics,
+- Real LLM scope,
+- Go/No-Go decisions,
+- or any change that could affect alpha evaluation integrity.
+
+When using an auxiliary agent, prefer read-only prompts such as:
+
+```text
+Inspect only; do not modify files. Check whether this diff contains temp files,
+reports/ai_advice logs, stale roadmap status, or obvious documentation drift.
+Return findings only.
+```
+
+Treat auxiliary output as input to review, not as approval. A supervisor or implementation Codex agent must still verify high-impact claims against the project contracts and tests.
+
+---
+
 ## 3. Project File Structure
 
 Follow this structure unless the existing repository already has a compatible convention:
