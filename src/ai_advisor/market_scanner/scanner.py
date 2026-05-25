@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import copy
 import json
 from collections import Counter
@@ -8,9 +9,14 @@ from pathlib import Path
 
 from ai_advisor.market_scanner.context_writer import build_stock_advice_context_data, deterministic_context_filename
 from ai_advisor.market_scanner.indicators import calculate_stock_indicators, classify_benchmark_regime
+from ai_advisor.market_scanner.local_raw_adapter import load_local_raw_market_data_snapshot
 from ai_advisor.market_scanner.schemas import (
     BenchmarkDailyRecord,
     DailyStockRecord,
+    LocalRawMarketDataSnapshot,
+    RawBenchmarkLoadResult,
+    RawSourceAudit,
+    RawStockLoadResult,
     ScannerBenchmarkSymbol,
     ScannerConfig,
     ScannerPassCandidate,
@@ -33,6 +39,49 @@ TECHNICAL_POSITION_PREFERENCE: dict[ScannerTechnicalPosition, int] = {
     "unknown": 6,
     "breakdown": 7,
 }
+
+
+def scan_local_raw_market_data(
+    listed_stock_file: str | Path,
+    otc_stock_file: str | Path,
+    taiex_benchmark_file: str | Path,
+    otc_benchmark_file: str | Path,
+    config: ScannerConfig | None = None,
+    output_dir: str | Path | None = None,
+) -> ScannerRunResult:
+    snapshot = load_local_raw_market_data_snapshot(
+        listed_stock_path=listed_stock_file,
+        otc_stock_path=otc_stock_file,
+        taiex_benchmark_path=taiex_benchmark_file,
+        otc_benchmark_path=otc_benchmark_file,
+    )
+    source_audit = _build_source_audit(snapshot)
+    stock_universe = _group_stock_records_by_market_and_id(
+        [*snapshot.listed_stocks.records, *snapshot.otc_stocks.records]
+    )
+    result = scan_market_candidates(
+        stock_universe,
+        {
+            "TAIEX": snapshot.taiex_benchmark.records,
+            "OTC": snapshot.otc_benchmark.records,
+        },
+        config=config,
+        output_dir=output_dir,
+    )
+    warnings = list(result.summary.warnings)
+    mismatch_warning = _source_latest_date_mismatch_warning(source_audit)
+    if mismatch_warning is not None:
+        warnings.append(mismatch_warning)
+    return result.model_copy(
+        update={
+            "summary": result.summary.model_copy(
+                update={
+                    "warnings": warnings,
+                    "source_audit": source_audit,
+                }
+            )
+        }
+    )
 
 
 def scan_market_candidates(
@@ -293,6 +342,39 @@ def _write_candidate_context(candidate: ScannerPassCandidate, output_dir: str | 
     return candidate.model_copy(update={"context_path": str(output_path)})
 
 
+def _group_stock_records_by_market_and_id(records: Sequence[DailyStockRecord]) -> list[list[DailyStockRecord]]:
+    grouped: dict[tuple[str, str], list[DailyStockRecord]] = {}
+    for record in sorted(records, key=lambda item: (item.market_type, item.stock_id, item.date)):
+        grouped.setdefault((record.market_type, record.stock_id), []).append(record)
+    return list(grouped.values())
+
+
+def _build_source_audit(snapshot: LocalRawMarketDataSnapshot) -> dict[str, RawSourceAudit]:
+    return {
+        "listed_stock": _raw_source_audit(snapshot.listed_stocks),
+        "otc_stock": _raw_source_audit(snapshot.otc_stocks),
+        "taiex_benchmark": _raw_source_audit(snapshot.taiex_benchmark),
+        "otc_benchmark": _raw_source_audit(snapshot.otc_benchmark),
+    }
+
+
+def _raw_source_audit(result: RawStockLoadResult | RawBenchmarkLoadResult) -> RawSourceAudit:
+    return RawSourceAudit(
+        record_count=len(result.records),
+        skipped_row_count=len(result.skipped_rows),
+        raw_skip_reason_counts=dict(Counter(row.reason for row in result.skipped_rows)),
+        latest_date=max((record.date for record in result.records), default=None),
+    )
+
+
+def _source_latest_date_mismatch_warning(source_audit: Mapping[str, RawSourceAudit]) -> str | None:
+    latest_dates = {source_name: audit.latest_date for source_name, audit in source_audit.items()}
+    if len(set(latest_dates.values())) <= 1:
+        return None
+    details = "; ".join(f"{source_name}={latest_date or 'none'}" for source_name, latest_date in latest_dates.items())
+    return f"source latest_date mismatch: {details}"
+
+
 def _skip(latest: DailyStockRecord, reason: str, details: list[str]) -> SkippedScannerCandidate:
     return SkippedScannerCandidate(stock_id=latest.stock_id, date=latest.date, reason=reason, details=details)
 
@@ -317,3 +399,58 @@ def _distance_above_ma20_sort_value(value: float | None) -> float:
     if value is None:
         return float("inf")
     return value if value > 0 else 0
+
+
+def _build_arg_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Generate AI Advisor StockAdviceContext JSON files from local official-format raw files."
+    )
+    parser.add_argument("--listed-stock-file", required=True, help="Local listed stock daily raw file.")
+    parser.add_argument("--otc-stock-file", required=True, help="Local OTC stock daily raw file.")
+    parser.add_argument("--taiex-benchmark-file", required=True, help="Local TAIEX benchmark raw file.")
+    parser.add_argument("--otc-benchmark-file", required=True, help="Local OTC benchmark raw file.")
+    parser.add_argument("--output", required=True, help="Output folder for generated StockAdviceContext JSON files.")
+    parser.add_argument("--max-output", type=int, default=50, help="Maximum contexts to write. Default: 50.")
+    parser.add_argument(
+        "--min-output-warning-threshold",
+        type=int,
+        default=20,
+        help="Warn when generated context count is below this threshold. Default: 20.",
+    )
+    parser.add_argument(
+        "--min-turnover-value",
+        type=int,
+        default=20_000_000,
+        help="Minimum latest turnover value in TWD. Default: 20000000.",
+    )
+    return parser
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = _build_arg_parser()
+    args = parser.parse_args(argv)
+    result = scan_local_raw_market_data(
+        listed_stock_file=args.listed_stock_file,
+        otc_stock_file=args.otc_stock_file,
+        taiex_benchmark_file=args.taiex_benchmark_file,
+        otc_benchmark_file=args.otc_benchmark_file,
+        config=ScannerConfig(
+            min_turnover_value=args.min_turnover_value,
+            min_output_warning_threshold=args.min_output_warning_threshold,
+            max_output=args.max_output,
+        ),
+        output_dir=args.output,
+    )
+    print(
+        json.dumps(
+            result.summary.model_dump(mode="json"),
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+        )
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

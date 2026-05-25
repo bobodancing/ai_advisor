@@ -168,6 +168,13 @@ class ScannerPassCandidate(ScannerBaseModel):
     context_path: str | None = None
 
 
+class RawSourceAudit(ScannerBaseModel):
+    record_count: int
+    skipped_row_count: int
+    raw_skip_reason_counts: dict[str, int] = Field(default_factory=dict)
+    latest_date: str | None = None
+
+
 class ScannerRunSummary(ScannerBaseModel):
     input_candidate_count: int
     output_context_count: int
@@ -176,6 +183,7 @@ class ScannerRunSummary(ScannerBaseModel):
     warnings: list[str] = Field(default_factory=list)
     skip_reason_counts: dict[str, int] = Field(default_factory=dict)
     penalty_counts: dict[str, int] = Field(default_factory=dict)
+    source_audit: dict[str, RawSourceAudit] = Field(default_factory=dict)
 
 
 class ScannerRunResult(ScannerBaseModel):

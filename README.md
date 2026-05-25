@@ -10,6 +10,7 @@ It is not an autonomous trading bot, public advisory service, market data downlo
 
 - Release notes: [docs/release_notes_v1_2_3.md](docs/release_notes_v1_2_3.md)
 - First pilot runbook: [docs/first_pilot_runbook.md](docs/first_pilot_runbook.md)
+- v1.3 scanner pilot runbook: [docs/market_scanner_pilot_runbook.md](docs/market_scanner_pilot_runbook.md)
 
 The first official pilot should start from a clean or archived `reports/ai_advice` state.
 
@@ -19,6 +20,7 @@ Use Python 3.11 or a compatible local Python environment.
 
 ```bash
 python -m pip install -r requirements.txt
+python -m pip install -e .
 ```
 
 ## Run Streamlit
@@ -50,12 +52,48 @@ In the Streamlit sidebar:
 5. Click `Run batch advice`.
 6. Review `Batch Results`, select a stock under `Stock Detail`, and check `Alpha Evaluation`.
 
+## Scanner-Generated Context Folder Flow
+
+The v1.3 Market Scanner pilot can generate a `StockAdviceContext` folder from four local official-format raw files. It remains local-only and does not download, scrape, or fetch market data.
+
+Required local raw input shape:
+
+```text
+listed stock daily raw file
+OTC stock daily raw file
+TAIEX benchmark raw file
+OTC benchmark raw file
+```
+
+Each aggregate raw file should contain at least 60 sessions for the stocks or benchmark series used by the scanner pilot.
+
+Example:
+
+```bash
+python -m ai_advisor.market_scanner.scanner \
+  --listed-stock-file data/raw_market/2026-05-24/listed_stock_daily.csv \
+  --otc-stock-file data/raw_market/2026-05-24/otc_stock_daily.csv \
+  --taiex-benchmark-file data/raw_market/2026-05-24/taiex_benchmark.csv \
+  --otc-benchmark-file data/raw_market/2026-05-24/otc_benchmark.csv \
+  --output data/pilot_contexts/2026-05-24 \
+  --max-output 50
+```
+
+Then load the generated output folder through the existing Streamlit fake/demo folder path flow:
+
+```text
+data/pilot_contexts/2026-05-24
+```
+
+See [docs/market_scanner_pilot_runbook.md](docs/market_scanner_pilot_runbook.md) for the local raw scanner pilot steps.
+
 ## No Context Folder Yet?
 
 AI Advisor v1.2.x needs `StockAdviceContext` JSON files. It does not download market data by itself.
 
 - If you have an after-market CSV, see the optional Scanner Lite plan: [docs/scanner_lite_context_builder_plan.md](docs/scanner_lite_context_builder_plan.md).
-- If you have no CSV and need the system to obtain market data, that is a Phase 2 / v1.3 Market Data Scanner task: [docs/market_data_scanner_v1_3_plan.md](docs/market_data_scanner_v1_3_plan.md).
+- If you have four local official-format aggregate raw files, use the v1.3 scanner pilot runbook: [docs/market_scanner_pilot_runbook.md](docs/market_scanner_pilot_runbook.md).
+- If you need the system itself to obtain market data, that remains a later downloader task and is not part of this pilot: [docs/market_data_scanner_v1_3_plan.md](docs/market_data_scanner_v1_3_plan.md).
 - v1.3 scanner roadmap: [docs/ai_advisor_v1_3_market_scanner_roadmap.md](docs/ai_advisor_v1_3_market_scanner_roadmap.md).
 
 ## Fake/Demo Mode
@@ -124,7 +162,8 @@ Release hardening command:
 
 ```bash
 python -m pip install -r requirements.txt
-pytest tests/test_ai_advisor_schemas.py tests/test_ai_advisor_guardrails.py tests/test_ai_advisor_batch.py tests/test_ai_advisor_evaluator.py tests/test_ai_advisor_streamlit_smoke.py
+python -m pip install -e .
+pytest tests/test_ai_advisor_schemas.py tests/test_ai_advisor_guardrails.py tests/test_ai_advisor_batch.py tests/test_ai_advisor_evaluator.py tests/test_ai_advisor_streamlit_smoke.py tests/test_ai_advisor_market_scanner.py tests/test_ai_advisor_market_scanner_indicators.py tests/test_ai_advisor_market_scanner_context_writer.py tests/test_ai_advisor_market_scanner_filter_score.py tests/test_ai_advisor_market_scanner_integration.py
 ```
 
 Narrow acceptance commands:
@@ -133,6 +172,7 @@ Narrow acceptance commands:
 pytest tests/test_ai_advisor_schemas.py tests/test_ai_advisor_guardrails.py tests/test_ai_advisor_batch.py
 pytest tests/test_ai_advisor_streamlit_smoke.py
 pytest tests/test_ai_advisor_evaluator.py
+pytest tests/test_ai_advisor_market_scanner.py tests/test_ai_advisor_market_scanner_indicators.py tests/test_ai_advisor_market_scanner_context_writer.py tests/test_ai_advisor_market_scanner_filter_score.py tests/test_ai_advisor_market_scanner_integration.py
 ```
 
 ## Secrets And Generated Logs

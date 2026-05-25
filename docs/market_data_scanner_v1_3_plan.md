@@ -486,17 +486,19 @@ tests/
   test_ai_advisor_market_scanner.py
 ```
 
-Suggested command:
+Pilot local raw command:
 
 ```bash
-python -m ai_advisor.market_scanner.scanner --date 2026-05-24 --output data/pilot_contexts/2026-05-24 --max 50
+python -m ai_advisor.market_scanner.scanner \
+  --listed-stock-file data/raw_market/2026-05-24/listed_stock_daily.csv \
+  --otc-stock-file data/raw_market/2026-05-24/otc_stock_daily.csv \
+  --taiex-benchmark-file data/raw_market/2026-05-24/taiex_benchmark.csv \
+  --otc-benchmark-file data/raw_market/2026-05-24/otc_benchmark.csv \
+  --output data/pilot_contexts/2026-05-24 \
+  --max-output 50
 ```
 
-If live download adapters are not ready, first implementation may support a local raw market-data folder:
-
-```bash
-python -m ai_advisor.market_scanner.scanner --input data/raw_market/2026-05-24 --output data/pilot_contexts/2026-05-24 --max 50
-```
+This pilot interface is local-only. It uses four aggregate official-format raw files and does not implement live download, network fetch, scraping, or one-file-per-date folder orchestration.
 
 ---
 
@@ -526,7 +528,7 @@ Acceptance commands:
 
 ```bash
 pytest tests/test_ai_advisor_market_scanner_indicators.py tests/test_ai_advisor_market_scanner.py
-pytest tests/test_ai_advisor_schemas.py tests/test_ai_advisor_market_scanner.py tests/test_ai_advisor_streamlit_smoke.py
+pytest tests/test_ai_advisor_schemas.py tests/test_ai_advisor_market_scanner.py tests/test_ai_advisor_streamlit_smoke.py tests/test_ai_advisor_market_scanner_integration.py
 ```
 
 ---

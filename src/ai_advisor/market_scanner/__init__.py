@@ -13,12 +13,6 @@ from ai_advisor.market_scanner.local_raw_adapter import (
     load_local_raw_market_data_snapshot,
     load_otc_stock_daily_records,
 )
-from ai_advisor.market_scanner.scanner import (
-    classify_technical_position,
-    evaluate_stock_candidate,
-    rank_scanner_candidates,
-    scan_market_candidates,
-)
 from ai_advisor.market_scanner.schemas import (
     BenchmarkDailyRecord,
     BenchmarkRegimeSnapshot,
@@ -26,6 +20,7 @@ from ai_advisor.market_scanner.schemas import (
     DailyStockRecord,
     LocalRawMarketDataSnapshot,
     RawBenchmarkLoadResult,
+    RawSourceAudit,
     RawStockLoadResult,
     ScannerConfig,
     ScannerPassCandidate,
@@ -38,6 +33,14 @@ from ai_advisor.market_scanner.schemas import (
     StockIndicatorSnapshot,
 )
 
+_SCANNER_EXPORTS = {
+    "classify_technical_position",
+    "evaluate_stock_candidate",
+    "rank_scanner_candidates",
+    "scan_local_raw_market_data",
+    "scan_market_candidates",
+}
+
 __all__ = [
     "BenchmarkDailyRecord",
     "BenchmarkRegimeSnapshot",
@@ -45,6 +48,7 @@ __all__ = [
     "DailyStockRecord",
     "LocalRawMarketDataSnapshot",
     "RawBenchmarkLoadResult",
+    "RawSourceAudit",
     "RawStockLoadResult",
     "ScannerConfig",
     "ScannerPassCandidate",
@@ -66,6 +70,15 @@ __all__ = [
     "load_local_raw_market_data_snapshot",
     "load_otc_stock_daily_records",
     "rank_scanner_candidates",
+    "scan_local_raw_market_data",
     "scan_market_candidates",
     "write_stock_advice_context_json",
 ]
+
+
+def __getattr__(name: str):
+    if name in _SCANNER_EXPORTS:
+        from ai_advisor.market_scanner import scanner
+
+        return getattr(scanner, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

@@ -61,6 +61,8 @@ M5 was completed as automated integration/smoke verification. Manual Streamlit b
 
 M6 was completed as source behavior verification only and recorded in `docs/market_data_source_spike_m6.md`. It did not implement a live downloader. The observed no-parameter OpenAPI candidates remain insufficient by themselves for MA60 / RS60 because stock feeds were observed as single-date snapshots and benchmark feeds were observed as current-month short series.
 
+Pilot readiness hardening uses a minimal local-only CLI and Python API. The pilot input shape is four aggregate official-format raw files: listed stock daily, OTC stock daily, TAIEX benchmark, and OTC benchmark. The scanner pilot must not add a downloader, network fetch, scraping, or one-file-per-date folder orchestration. Operator steps are in `docs/market_scanner_pilot_runbook.md`.
+
 ## 4. Acceptance Commands
 
 Expected first implementation tests:
@@ -78,8 +80,11 @@ pytest tests/test_ai_advisor_schemas.py \
        tests/test_ai_advisor_batch.py \
        tests/test_ai_advisor_evaluator.py \
        tests/test_ai_advisor_streamlit_smoke.py \
+       tests/test_ai_advisor_market_scanner.py \
        tests/test_ai_advisor_market_scanner_indicators.py \
-       tests/test_ai_advisor_market_scanner.py
+       tests/test_ai_advisor_market_scanner_context_writer.py \
+       tests/test_ai_advisor_market_scanner_filter_score.py \
+       tests/test_ai_advisor_market_scanner_integration.py
 ```
 
 ---

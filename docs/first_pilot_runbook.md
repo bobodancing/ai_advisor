@@ -118,7 +118,8 @@ For a real after-market pilot:
 If you do not have a context folder yet:
 
 - If you have an after-market CSV, use the optional Scanner Lite / Context Builder plan in `docs/scanner_lite_context_builder_plan.md`.
-- If you do not have CSV either and need the system to obtain market data, stop the pilot and plan the Phase 2 / v1.3 Market Data Scanner in `docs/market_data_scanner_v1_3_plan.md`.
+- If you have four aggregate local official-format raw files, use the v1.3 scanner pilot runbook in `docs/market_scanner_pilot_runbook.md` to generate a context folder first.
+- If you need the system itself to obtain market data, stop the pilot and plan the later downloader work in `docs/market_data_scanner_v1_3_plan.md`.
 
 Do not start an official pilot by fabricating context values.
 
