@@ -1,6 +1,6 @@
 # Market Data Scanner v1.3 Plan
 
-Status: Gate 0 resolved; M4 scanner filter/score implemented
+Status: Gate 0 resolved; M5 integration check implemented
 Owner: PM + Codex  
 Purpose: solve the blocker where the trader has no CSV and no ready `StockAdviceContext` folder.
 
@@ -518,6 +518,8 @@ python -m ai_advisor.market_scanner.scanner --input data/raw_market/2026-05-24 -
 - scanner does not mutate advice/evaluation logs.
 
 Before generated `market_scan` contexts are used with any real LLM mode, prompt/rendering behavior must be reviewed so `market_scan` is not described as a real sector or narrative theme.
+
+M5 integration check is automated integration/smoke verification only. Manual Streamlit browser UAT has not been executed and remains for release/UAT or a later manual acceptance pass.
 
 Acceptance commands:
 
