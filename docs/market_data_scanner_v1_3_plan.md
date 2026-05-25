@@ -1,6 +1,6 @@
 # Market Data Scanner v1.3 Plan
 
-Status: Gate 0 resolved; M2 indicators implemented
+Status: Gate 0 resolved; M3 context writer implemented
 Owner: PM + Codex  
 Purpose: solve the blocker where the trader has no CSV and no ready `StockAdviceContext` folder.
 
@@ -350,6 +350,8 @@ M2 indicator logic may return scanner-only `risk_state = "unknown"` when benchma
 ## 8. Filter Policy
 
 The scanner filter should produce enough contexts while still respecting the no-chase / balanced-risk product philosophy.
+
+M4 owns hard skip policy, penalty policy, and final scanner score. M3 structural risk derivation exists only to support valid `StockAdviceContext` schema output and must not be treated as final scanner policy.
 
 Initial configurable defaults:
 

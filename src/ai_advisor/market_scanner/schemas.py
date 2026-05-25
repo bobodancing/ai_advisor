@@ -110,3 +110,18 @@ class BenchmarkRegimeSnapshot(ScannerBaseModel):
     ma60: float | None = None
     risk_state: ScannerRiskState = "unknown"
     warnings: list[str] = Field(default_factory=list)
+
+
+class SkippedContextCandidate(ScannerBaseModel):
+    stock_id: str | None = None
+    date: str | None = None
+    reason: str
+    details: list[str] = Field(default_factory=list)
+
+
+class ContextWriteResult(ScannerBaseModel):
+    was_written: bool
+    context_path: str | None = None
+    context_data: dict[str, Any] | None = None
+    skipped_candidate: SkippedContextCandidate | None = None
+    warnings: list[str] = Field(default_factory=list)
