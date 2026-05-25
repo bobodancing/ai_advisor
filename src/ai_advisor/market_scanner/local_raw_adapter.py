@@ -57,44 +57,44 @@ NON_COMMON_STOCK_NAME_KEYWORDS = (
 )
 
 LISTED_ALIASES: dict[str, tuple[str, ...]] = {
-    "date": ("Date", "date", "日期"),
+    "date": ("Date", "date", "日期", "資料日期", "交易日期"),
     "stock_id": ("Code", "code", "證券代號", "有價證券代號"),
     "name": ("Name", "name", "證券名稱", "有價證券名稱"),
-    "open": ("OpeningPrice", "Open", "open", "開盤價"),
-    "high": ("HighestPrice", "High", "high", "最高價"),
-    "low": ("LowestPrice", "Low", "low", "最低價"),
-    "close": ("ClosingPrice", "Close", "close", "收盤價"),
+    "open": ("OpeningPrice", "Open", "open", "開盤價", "開盤"),
+    "high": ("HighestPrice", "High", "high", "最高價", "最高"),
+    "low": ("LowestPrice", "Low", "low", "最低價", "最低"),
+    "close": ("ClosingPrice", "Close", "close", "收盤價", "收盤"),
     "change": ("Change", "change", "漲跌價差", "漲跌"),
     "volume": ("TradeVolume", "TradingShares", "成交股數", "成交量"),
     "turnover_value": ("TradeValue", "TransactionAmount", "成交金額"),
     "transactions": ("Transaction", "TransactionNumber", "成交筆數"),
     "is_limit_up": ("IsLimitUp", "LimitUpFlag", "漲停註記"),
-    "next_limit_up": ("NextLimitUp", "漲停價"),
-    "next_limit_down": ("NextLimitDown", "跌停價"),
+    "next_limit_up": ("NextLimitUp", "漲停價", "次日漲停價"),
+    "next_limit_down": ("NextLimitDown", "跌停價", "次日跌停價"),
 }
 
 OTC_ALIASES: dict[str, tuple[str, ...]] = {
-    "date": ("Date", "date", "日期"),
+    "date": ("Date", "date", "日期", "資料日期", "交易日期"),
     "stock_id": ("SecuritiesCompanyCode", "Code", "code", "代號", "證券代號"),
     "name": ("CompanyName", "Name", "name", "名稱", "證券名稱"),
-    "open": ("Open", "OpeningPrice", "open", "開盤價"),
-    "high": ("High", "HighestPrice", "high", "最高價"),
-    "low": ("Low", "LowestPrice", "low", "最低價"),
-    "close": ("Close", "ClosingPrice", "close", "收盤價"),
+    "open": ("Open", "OpeningPrice", "open", "開盤價", "開盤"),
+    "high": ("High", "HighestPrice", "high", "最高價", "最高"),
+    "low": ("Low", "LowestPrice", "low", "最低價", "最低"),
+    "close": ("Close", "ClosingPrice", "close", "收盤價", "收盤"),
     "change": ("Change", "change", "漲跌"),
     "volume": ("TradingShares", "TradeVolume", "成交股數", "成交量"),
     "turnover_value": ("TransactionAmount", "TradeValue", "成交金額"),
     "transactions": ("TransactionNumber", "Transaction", "成交筆數"),
     "is_limit_up": ("IsLimitUp", "LimitUpFlag", "漲停註記"),
-    "next_limit_up": ("NextLimitUp", "漲停價"),
-    "next_limit_down": ("NextLimitDown", "跌停價"),
+    "next_limit_up": ("NextLimitUp", "漲停價", "次日漲停價"),
+    "next_limit_down": ("NextLimitDown", "跌停價", "次日跌停價"),
 }
 
 BENCHMARK_ALIASES: dict[str, tuple[str, ...]] = {
-    "date": ("Date", "date", "日期"),
+    "date": ("Date", "date", "日期", "資料日期", "交易日期"),
     "symbol": ("BenchmarkSymbol", "benchmark_symbol", "IndexCode", "指數代號"),
-    "name": ("IndexName", "Name", "name", "指數名稱"),
-    "open": ("OpeningIndex", "OpeningPrice", "Open", "open", "開盤指數", "開盤價"),
+    "name": ("IndexName", "Name", "name", "指數名稱", "指數"),
+    "open": ("OpeningIndex", "OpeningPrice", "Open", "open", "開盤指數", "開盤價", "開市"),
     "high": ("HighestIndex", "HighestPrice", "High", "high", "最高指數", "最高價"),
     "low": ("LowestIndex", "LowestPrice", "Low", "low", "最低指數", "最低價"),
     "close": (
@@ -102,13 +102,15 @@ BENCHMARK_ALIASES: dict[str, tuple[str, ...]] = {
         "ClosingPrice",
         "Close",
         "close",
+        "TPExIndex",
         "TAIEX",
         "收盤指數",
         "收盤價",
+        "收市",
         "發行量加權股價指數",
         "櫃買指數",
     ),
-    "change": ("Change", "change", "漲跌", "漲跌點數"),
+    "change": ("Change", "change", "漲跌點數", "漲跌"),
 }
 
 NUMERIC_PATTERN = re.compile(r"^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$")

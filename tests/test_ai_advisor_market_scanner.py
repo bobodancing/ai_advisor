@@ -118,3 +118,35 @@ def test_local_raw_snapshot_keeps_listed_otc_and_benchmarks_distinct() -> None:
     assert {"0050", "00679B"}.issubset(skipped_ids)
     loaded_ids = {record.stock_id for record in snapshot.listed_stocks.records + snapshot.otc_stocks.records}
     assert loaded_ids == {"2330", "6488"}
+
+
+def test_official_csv_source_contract_rows_parse_with_chinese_headers() -> None:
+    listed = load_listed_stock_daily_records(FIXTURE_DIR / "listed_stock_day_all_official_csv_sample.csv")
+    otc = load_otc_stock_daily_records(FIXTURE_DIR / "otc_daily_close_quotes_official_csv_sample.csv")
+    taiex = load_benchmark_daily_records(FIXTURE_DIR / "taiex_mi_index_official_csv_sample.csv", "TAIEX")
+    otc_index = load_benchmark_daily_records(FIXTURE_DIR / "otc_index_official_csv_sample.csv", "OTC")
+
+    assert [record.stock_id for record in listed.records] == ["2330"]
+    assert listed.records[0].date == "2026-05-22"
+    assert listed.records[0].name == "台積電"
+    assert listed.records[0].close == 2255
+    assert listed.records[0].volume == 26823133
+    assert {row.stock_id for row in listed.skipped_rows} == {"0050"}
+
+    assert [record.stock_id for record in otc.records] == ["6488"]
+    assert otc.records[0].date == "2026-05-25"
+    assert otc.records[0].name == "環球晶"
+    assert otc.records[0].close == 788
+    assert otc.records[0].change == 71
+    assert otc.records[0].next_limit_up == 866
+    assert otc.records[0].next_limit_down == 710
+    assert {row.stock_id for row in otc.skipped_rows} == {"006201"}
+
+    assert len(taiex.records) == 1
+    assert taiex.records[0].date == "2026-05-22"
+    assert taiex.records[0].close == 42267.97
+    assert taiex.records[0].change == 899.76
+
+    assert [record.date for record in otc_index.records] == ["2026-05-22", "2026-05-25"]
+    assert otc_index.records[-1].close == 434.99
+    assert otc_index.records[-1].open == 426.34

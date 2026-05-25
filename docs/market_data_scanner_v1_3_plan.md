@@ -1,6 +1,6 @@
 # Market Data Scanner v1.3 Plan
 
-Status: Gate 0 resolved; M5 integration check implemented
+Status: Gate 0 resolved; M6 official source spike completed
 Owner: PM + Codex  
 Purpose: solve the blocker where the trader has no CSV and no ready `StockAdviceContext` folder.
 
@@ -72,6 +72,7 @@ Not allowed in first scanner version:
 - changing benchmark mapping without PM approval.
 
 Market data source Gate 0 is resolved in `docs/market_data_source_decision.md`.
+M6 source findings are recorded in `docs/market_data_source_spike_m6.md`.
 
 Resolved source policy:
 
@@ -84,7 +85,7 @@ First implementation:
   then official downloader after source behavior is verified
 ```
 
-The implementation session must verify current official source/API behavior before coding live download adapters.
+M6 verified current official source/API behavior as a spike only. The observed no-parameter endpoints remain insufficient by themselves for MA60 / RS60, so this is not production downloader approval.
 
 Source policy:
 

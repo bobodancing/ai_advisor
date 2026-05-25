@@ -1,7 +1,7 @@
 # Market Data Source Decision
 
-Status: accepted / Gate 0 resolved
-Related: `humanpending.md`, `docs/market_data_scanner_v1_3_plan.md`
+Status: accepted / Gate 0 resolved / M6 source spike completed
+Related: `humanpending.md`, `docs/market_data_scanner_v1_3_plan.md`, `docs/market_data_source_spike_m6.md`
 
 This ADR records the market data source decision for the v1.3 Market Data Scanner.
 
@@ -30,6 +30,35 @@ First implementation starts with a local raw market-data file adapter, then adds
 ```
 
 The local raw adapter is not a permanent manual-data requirement. It is the first engineering step that lets scanner logic, indicators, filters, and context writing be tested against official-format raw data before live download behavior is added.
+
+---
+
+## M6 Source Spike Summary
+
+M6 source behavior verification was recorded in:
+
+```text
+docs/market_data_source_spike_m6.md
+```
+
+Observed conclusion:
+
+```text
+Official TWSE / TPEx source direction remains feasible.
+The checked no-parameter OpenAPI candidates are not enough by themselves for
+MA60 / RS60 because stock feeds were observed as single-date snapshots and
+benchmark feeds were observed as current-month short series.
+```
+
+Important M6 gaps:
+
+- TWSE `STOCK_DAY_ALL` did not expose listed limit-up / limit-down fields.
+- TPEx daily close quotes exposed `NextLimitUp` and `NextLimitDown`, but these are next-day limit prices, not same-day official limit-up flags.
+- Observed TWSE and TPEx latest dates differed on 2026-05-25, so a future downloader must validate same-date completeness before combining sources.
+- Historical accumulation behavior remains unverified and must be solved before production downloader implementation.
+- Official feeds include non-common instruments; universe filtering remains required.
+
+M6 added small official-format source-contract fixtures for the local raw adapter. It did not implement a live downloader.
 
 ---
 

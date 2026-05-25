@@ -4,7 +4,7 @@ Project: Market Data Scanner / Context Generator
 
 Roadmap owner: PM + Codex
 
-Status: Gate 0 resolved, M5 integration check implemented
+Status: Gate 0 resolved, M6 official source spike completed
 
 Created: 2026-05-24
 
@@ -53,11 +53,13 @@ M1 may begin. The first implementation must use local raw official-format files 
 | M3 - Context Writer | 2026-06-02 | Codex | generated JSON validates as `StockAdviceContext`; theme/leader fallback tested | Done |
 | M4 - Scanner Filter / Score | 2026-06-05 | Codex + PM | hard skip vs penalty rules tested; at least 20 fixture contexts generated | Done |
 | M5 - Streamlit Integration Check | 2026-06-07 | Codex | generated folder loads through existing v1.2 Streamlit flow | Done |
-| M6 - Official Downloader Spike | 2026-06-12 | Codex | current TWSE / TPEx source behavior verified; no brittle scraping accepted | Planned |
+| M6 - Official Downloader Spike | 2026-06-12 | Codex | current TWSE / TPEx source behavior verified; no brittle scraping accepted | Done |
 
 ---
 
 M5 was completed as automated integration/smoke verification. Manual Streamlit browser UAT has not been executed and remains for release/UAT or a later manual acceptance pass.
+
+M6 was completed as source behavior verification only and recorded in `docs/market_data_source_spike_m6.md`. It did not implement a live downloader. The observed no-parameter OpenAPI candidates remain insufficient by themselves for MA60 / RS60 because stock feeds were observed as single-date snapshots and benchmark feeds were observed as current-month short series.
 
 ## 4. Acceptance Commands
 
