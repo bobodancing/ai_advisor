@@ -1,6 +1,6 @@
 # Market Data Scanner v1.3 Plan
 
-Status: Gate 0 resolved; M3 context writer implemented
+Status: Gate 0 resolved; M4 scanner filter/score implemented
 Owner: PM + Codex  
 Purpose: solve the blocker where the trader has no CSV and no ready `StockAdviceContext` folder.
 

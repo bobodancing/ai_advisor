@@ -4,7 +4,7 @@ Project: Market Data Scanner / Context Generator
 
 Roadmap owner: PM + Codex
 
-Status: Gate 0 resolved, M3 implemented
+Status: Gate 0 resolved, M4 implemented
 
 Created: 2026-05-24
 
@@ -51,7 +51,7 @@ M1 may begin. The first implementation must use local raw official-format files 
 | M1 - Local Raw Adapter | 2026-05-27 | Codex | local daily stock/benchmark files load into typed records; source-contract tests pass | Done |
 | M2 - Indicators | 2026-05-29 | Codex | MA, volume ratio, relative strength, market regime tests pass | Done |
 | M3 - Context Writer | 2026-06-02 | Codex | generated JSON validates as `StockAdviceContext`; theme/leader fallback tested | Done |
-| M4 - Scanner Filter / Score | 2026-06-05 | Codex + PM | hard skip vs penalty rules tested; at least 20 fixture contexts generated | Planned |
+| M4 - Scanner Filter / Score | 2026-06-05 | Codex + PM | hard skip vs penalty rules tested; at least 20 fixture contexts generated | Done |
 | M5 - Streamlit Integration Check | 2026-06-07 | Codex | generated folder loads through existing v1.2 Streamlit flow | Planned |
 | M6 - Official Downloader Spike | 2026-06-12 | Codex | current TWSE / TPEx source behavior verified; no brittle scraping accepted | Planned |
 

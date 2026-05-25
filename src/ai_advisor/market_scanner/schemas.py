@@ -9,6 +9,16 @@ ScannerMarketType = Literal["listed", "otc"]
 ScannerBenchmarkSymbol = Literal["TAIEX", "OTC"]
 InstrumentClassification = Literal["common_stock_candidate", "non_common_stock", "unknown"]
 ScannerRiskState = Literal["risk_on", "neutral", "risk_off", "unknown"]
+ScannerTechnicalPosition = Literal[
+    "breakout",
+    "pullback_to_ma5",
+    "pullback_to_ma10_and_rebound",
+    "near_ma20_support",
+    "extended_above_ma",
+    "breakdown",
+    "range_bound",
+    "unknown",
+]
 
 
 class ScannerBaseModel(BaseModel):
@@ -125,3 +135,50 @@ class ContextWriteResult(ScannerBaseModel):
     context_data: dict[str, Any] | None = None
     skipped_candidate: SkippedContextCandidate | None = None
     warnings: list[str] = Field(default_factory=list)
+
+
+class ScannerConfig(ScannerBaseModel):
+    min_turnover_value: int = 20_000_000
+    min_output_warning_threshold: int = 20
+    max_output: int = 50
+
+
+class SkippedScannerCandidate(ScannerBaseModel):
+    stock_id: str | None = None
+    date: str | None = None
+    reason: str
+    details: list[str] = Field(default_factory=list)
+
+
+class ScannerPassCandidate(ScannerBaseModel):
+    stock_id: str
+    stock_name: str
+    market_type: ScannerMarketType
+    date: str
+    risk_reward_ratio: float
+    relative_strength_20d_vs_benchmark: float | None = None
+    relative_strength_60d_vs_benchmark: float | None = None
+    volume_ratio_20d: float
+    technical_position: ScannerTechnicalPosition
+    distance_from_ma20: float | None = None
+    penalties: list[str] = Field(default_factory=list)
+    scanner_rank: int | None = None
+    scanner_score: float | None = None
+    context_data: dict[str, Any]
+    context_path: str | None = None
+
+
+class ScannerRunSummary(ScannerBaseModel):
+    input_candidate_count: int
+    output_context_count: int
+    skipped_count: int
+    penalty_candidate_count: int
+    warnings: list[str] = Field(default_factory=list)
+    skip_reason_counts: dict[str, int] = Field(default_factory=dict)
+    penalty_counts: dict[str, int] = Field(default_factory=dict)
+
+
+class ScannerRunResult(ScannerBaseModel):
+    candidates: list[ScannerPassCandidate]
+    skipped_candidates: list[SkippedScannerCandidate]
+    summary: ScannerRunSummary
