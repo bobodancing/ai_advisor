@@ -134,6 +134,8 @@ data/pilot_contexts/2026-05-24
 
 Manual Streamlit browser UAT remains separate from the automated scanner integration test. Report browser inspection as `[inspected]`.
 
+Use `docs/market_scanner_pilot_uat_evidence_template.md` to record manual pilot evidence consistently.
+
 ## 7. Log Integrity
 
 The scanner command writes context JSON files only. It must not create, edit, reorder, deduplicate, or mutate:
@@ -156,4 +158,5 @@ Those logs are created or appended only by the existing AI Advisor advice and fo
 - Four source `latest_date` values are checked; any mismatch warning is recorded.
 - Generated folder contains at least 20 valid contexts for a pilot-sized input set.
 - Streamlit fake/demo loads the generated folder and shows a ranked table.
+- Manual UAT evidence is recorded in `docs/market_scanner_pilot_uat_evidence_template.md` or a private copy of that template.
 - No downloader, network fetch, scraping, or one-file-per-date orchestration was used.
