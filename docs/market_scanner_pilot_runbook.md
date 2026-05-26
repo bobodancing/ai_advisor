@@ -150,13 +150,18 @@ Those logs are created or appended only by the existing AI Advisor advice and fo
 ## 8. Pilot Checklist
 
 - Four local aggregate raw files are present.
+- Raw file hashes, byte sizes, and modified times are recorded before the scanner run.
 - Each file has enough history for MA60 / RS60 logic.
 - `python -m ai_advisor.market_scanner.scanner --help` works.
+- JSONL inventory for `reports/ai_advice/*.jsonl` is recorded before the scanner run.
 - Scanner command prints a local summary and writes context JSON files.
+- JSONL inventory is recorded after the scanner run and compared against the pre-scanner inventory.
 - `source_audit` is reviewed for each source.
 - Raw skipped rows and `raw_skip_reason_counts` are reviewed.
 - Four source `latest_date` values are checked; any mismatch warning is recorded.
 - Generated folder contains at least 20 valid contexts for a pilot-sized input set.
+- Every generated `.json` file validates with `StockAdviceContext.model_validate`; record `total_json_count`, `valid_count`, and `invalid_count`.
 - Streamlit fake/demo loads the generated folder and shows a ranked table.
+- JSONL inventory is recorded after the Streamlit run; if the advice log appended, record the `line_count` and `sha256` change.
 - Manual UAT evidence is recorded in `docs/market_scanner_pilot_uat_evidence_template.md` or a private copy of that template.
 - No downloader, network fetch, scraping, or one-file-per-date orchestration was used.
