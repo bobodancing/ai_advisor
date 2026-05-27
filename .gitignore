@@ -2,5 +2,7 @@
 .env.*
 secrets.json
 reports/ai_advice/*.jsonl
+data/raw_market/
+data/pilot_contexts/
 __pycache__/
 .pytest_cache/
