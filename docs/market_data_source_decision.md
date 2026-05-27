@@ -31,6 +31,19 @@ First implementation starts with a local raw market-data file adapter, then adds
 
 The local raw adapter is not a permanent manual-data requirement. It is the first engineering step that lets scanner logic, indicators, filters, and context writing be tested against official-format raw data before live download behavior is added.
 
+## HP-003 One-Shot Pilot Data Prep
+
+Resolved on: 2026-05-27
+
+```text
+HP-003 = B
+Allow a one-shot official data preparation helper to fetch official TWSE / TPEx
+public historical monthly endpoints for the watchlist and write local aggregate
+raw CSV files for the scanner pilot.
+```
+
+This is a pilot data preparation exception only. It is not approval for a production downloader, scheduling, Streamlit integration, scanner policy changes, or changes to guardrails, hard skips, ranking, benchmark mapping, advice logging, or alpha denominator semantics.
+
 ---
 
 ## M6 Source Spike Summary
