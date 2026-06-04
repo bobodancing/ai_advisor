@@ -31,13 +31,17 @@ Session F: Stock Batch Core
 
 | Milestone | Deadline | Owner | Exit Criteria | Status |
 |---|---:|---|---|---|
-| M0 - Kickoff Readiness | 2026-05-24 | PM + Codex | 新 session 讀完 `AGENTS.md` 與 v1.2 spec，確認只做 Session F | Not started |
+| M0 - Kickoff Readiness | 2026-05-24 | PM + Codex | 新 session 讀完 `AGENTS.md` 與 v1.2 spec，確認只做 Session F | Done |
 | M1 - Session F Stock Batch Core | 2026-05-29 | Codex | schema、fake client、balanced guardrails、batch engine、ranking、immutable advice log 完成且測試通過 | Done |
 | M2 - Session F Review / Fix Buffer | 2026-05-31 | PM + Codex | 修完 M1 review findings，無 High/Medium blocker | Done |
 | M3 - Session G Streamlit MVP | 2026-06-05 | Codex | Streamlit 可載入 20+ fixtures、fake/demo mode、real LLM guard、結果表、詳情頁 | Done |
 | M4 - Session H Follow-up Evaluation | 2026-06-09 | Codex | follow-up CSV 讀取、evaluation JSONL、5 trading day alpha hit rate 完成 | Done |
-| M5 - Release Hardening | 2026-06-11 | PM + Codex | CI、README、release UAT checklist、完整相關測試通過，文件與 DoD 對齊，無 scope creep | Next |
-| M6 - v1.2 MVP Go/No-Go | 2026-06-12 | PM | 決定可否進入個人盤後試用 | Not started |
+| M5 - Release Hardening | 2026-06-11 | PM + Codex | CI、README、release UAT checklist、完整相關測試通過，文件與 DoD 對齊，無 scope creep | Done |
+| M6 - v1.2 MVP Go/No-Go | 2026-06-12 | PM | 決定可否進入個人盤後試用 | Done - v1.2.3 sealed |
+| P1 - Formal Scanner Pilot UAT | 2026-05-27 | PM + Codex | official-format local raw files 產生 20+ valid contexts，Streamlit fake/demo UAT Go | Done |
+| P2 - First Real Advice Pilot | 2026-05-27 | PM + Codex | official scanner contexts + fake/demo deterministic advice 產生 immutable pilot advice log | Done |
+| P3 - 5-Trading-Day Alpha Evaluation | 2026-06-02 | PM + Codex | official follow-up data prep、follow-up CSV、evaluation JSONL append；advice log hash 不變 | Done |
+| P4 - Pilot Retrospective | TBD | PM + Trader | 檢視 9/17 hit、top/bottom alpha、guardrail/data-quality usefulness，決定是否開下一輪 pilot 或 downloader gate | Next |
 
 ---
 
@@ -256,17 +260,35 @@ Do not implement these before v1.2 Go/No-Go.
 
 ## 9. Current Project Status
 
-As of 2026-05-23:
+As of 2026-06-04:
 
-- Product spec v1.2 exists。
-- `AGENTS.md` is approved for implementation governance。
-- Roadmap is created。
-- Session F / G / H have passed PM review based on reported implementation and tests。
-- Next work is Release Hardening: CI, README, release UAT checklist, and final verification。
-- Real LLM execution remains Phase 2 / v1.3 and must not be implemented during hardening.
+- v1.2.3 已封版，Streamlit 批次個股 Alpha Finder 是主產品入口。
+- `AGENTS.md` 已精簡為 operating contract，保留 deterministic / auditable 紅線，避免 token 負擔過高。
+- Formal Scanner Pilot UAT 已 Go：26 valid contexts、17 actionable、0 blocked。
+- First Real Advice Pilot 已完成：active advice log 26 rows，SHA256 `bffb52af5f81433b6209677b8099720d3944bd89bd02cb2f1952506d45959d5b`，已封存 snapshot。
+- 5-trading-day follow-up evaluation 已完成：evaluation log append 26 records，actionable complete count 17，alpha hits 9，hit rate 52.94%，average alpha 1.7874%。
+- active advice log 在 evaluation 前後 hash 不變；evaluation log 保持 separate append-only。
+- `scripts/build_first_pilot_followup_csv.py` 補上 first pilot follow-up CSV 產生流程，只讀 advice log 與 local raw aggregate CSV，不做 network fetch，不寫 advice/evaluation logs。
+- `.gitignore` 已忽略 local follow-up artifacts 與 editable-install egg-info。
+- Real LLM execution 仍未批准；v1.2 real mode 保持 guard-only。
+- Production downloader 仍是 No-Go；HP-003 只允許 one-shot official pilot data prep helper。
 
 Next action:
 
 ```text
-Open a new Codex session and request Release Hardening only.
+Run pilot retrospective before opening any next pilot, scanner threshold change, or production downloader gate.
 ```
+
+## 10. Pilot Progress Table
+
+| Track | Status | Evidence | Next Decision |
+|---|---|---|---|
+| v1.2 batch advice core | Done | schema / guardrails / ranking / batch / logging tests passed during release hardening | Maintain only; no scope change |
+| Streamlit cockpit | Done | fake/demo batch flow and Stock Detail inspected in formal UAT | Maintain; do not rerun official pilot batch unless starting a new pilot |
+| Real LLM mode | Guard-only | API key / call estimate / max-call guard only | Provider execution remains Phase 2 / explicit gate |
+| v1.3 scanner local raw flow | Done | official pilot produced 26 valid contexts from local aggregate raw files | Use for pilot context generation only |
+| Official source one-shot prep | Pilot exception | HP-003 helper produced local raw files for pilot/follow-up | Not production downloader approval |
+| First real advice pilot | Done | active advice log 26 rows, 17 actionable, immutable hash verified | Use for retrospective |
+| 5-day alpha evaluation | Done | 17 complete actionable follow-ups, 9 alpha hits, 52.94% hit rate | Review alpha quality and guardrail usefulness |
+| Repo hygiene | Done | `data/followup/`, raw/pilot data, JSONL logs, egg-info ignored | Commit helper + governance/docs changes |
+| Production downloader | No-Go | M6 source spike found unresolved history/update-timing gaps | Reopen only after retrospective and explicit gate |

@@ -4,5 +4,7 @@ secrets.json
 reports/ai_advice/*.jsonl
 data/raw_market/
 data/pilot_contexts/
+data/followup/
 __pycache__/
+src/*.egg-info/
 .pytest_cache/

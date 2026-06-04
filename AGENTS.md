@@ -1,31 +1,39 @@
-# AI Advisor v1.2 — AGENTS.md
+# AI Advisor — Codex Operating Contract
 
-**Codex operating rules for `ai_advisor` — Streamlit 批次個股 Alpha Finder**
+This is the compact governance file for Codex in this repository.
 
-This file defines how Codex must work inside this project.
+Read this first. Then read the task-relevant source documents:
 
-The goal is not to create a clever AI stock commentator.  
-The goal is to build a deterministic, auditable, product-ready trading decision support module that helps a personal Taiwan stock trader quickly find actionable candidates after market close and later evaluate whether those candidates generated 5-trading-day alpha versus the correct market benchmark.
+- `README.md`
+- `ai_advisor_module_spec_v1_2_product_ready.md`
+- `humanpending.md`
+- v1.2 release/UAT docs when touching advice, Streamlit, logs, or evaluation
+- v1.3 scanner docs when touching `market_scanner`
+
+If this file and a detailed spec appear to conflict, follow the stricter, more deterministic, more audit-preserving rule and report the conflict.
 
 ---
 
-## 0. Project Mission
+## 1. Mission
 
-`ai_advisor` is a personal trading cockpit module.
+AI Advisor is a personal Taiwan stock after-market decision-support module.
 
-It helps the user:
+The product loop is:
 
-1. Load many structured `StockAdviceContext` JSON files.
-2. Generate stock-only trade advice in fake/demo mode or real LLM mode.
-3. Apply deterministic balanced guardrails.
-4. Rank candidates using fixed ordering rules.
-5. Inspect each stock's final trade plan in Streamlit.
-6. Append immutable advice snapshots to JSONL logs.
-7. Import follow-up CSV data.
-8. Append follow-up evaluation records to a separate evaluation JSONL.
-9. Measure 5-trading-day alpha hit rate versus market benchmark.
+```text
+market data / user input
+-> StockAdviceContext JSON folder
+-> deterministic or guarded advice generation
+-> deterministic guardrails
+-> fixed ranking
+-> Streamlit inspection
+-> append-only advice JSONL
+-> follow-up CSV
+-> append-only evaluation JSONL
+-> 5-trading-day alpha review
+```
 
-The product is successful only if it improves both:
+The product succeeds only if it improves:
 
 ```text
 candidate discovery speed
@@ -33,23 +41,39 @@ candidate discovery speed
 alpha evaluation integrity
 ```
 
-This system is not:
+This is not an autonomous trading bot, public advisory service, live intraday monitor, markdown parser, database product, or general finance chatbot.
 
-- an autonomous trading bot,
-- a public investment advisory service,
-- a live intraday monitoring system,
-- a market data downloader,
-- a Markdown parser,
-- a multi-user SaaS,
-- or a general-purpose AI finance chatbot.
+Safety wording must remain visible in user-facing flows:
+
+```text
+交易決策輔助，不是保證獲利或下單指令。
+```
 
 ---
 
-## 1. Core Operating Philosophy
+## 2. Current Product State
 
-### P1 — Deterministic Over Clever
+- v1.2.3 is sealed.
+- v1.2 primary product is Streamlit batch stock Alpha Finder.
+- v1.2 supports fake/demo batch advice, deterministic guardrails, fixed ranking, JSONL advice logging, follow-up CSV evaluation, CI, README, and UAT docs.
+- v1.2 Real LLM mode is guard-only: API key check, estimated calls, and max-call guard. No provider execution is approved.
+- v1.3 Market Scanner is an upstream context generator. Its boundary is:
 
-Prefer deterministic, testable behavior over impressive AI behavior.
+```text
+local/official-format market data
+-> deterministic scanner
+-> StockAdviceContext JSON folder
+-> existing Streamlit AI Advisor
+```
+
+- Production downloader remains No-Go until explicitly approved after pilot retrospective.
+- One-shot official pilot data prep helper is allowed only as HP-003 pilot exception; it is not production downloader approval.
+
+When an official pilot advice log is active, do not rerun Streamlit batch before follow-up evaluation unless the user explicitly starts a new pilot. Reruns append duplicate advice snapshots and can pollute pilot accounting.
+
+---
+
+## 3. Non-Negotiable Priorities
 
 Priority order:
 
@@ -57,350 +81,141 @@ Priority order:
 correctness
 > reproducibility
 > auditability
-> product scope discipline
+> scope control
 > trader workflow speed
 > implementation elegance
 > AI cleverness
 ```
 
-Do not invent hidden heuristics.  
-Do not silently change ranking, evaluation, guardrail, schema, or logging semantics.
+Do not silently change:
 
-When the spec gives an enum, threshold, denominator, path, or ordering rule, treat it as a contract.
+- schema semantics
+- guardrail thresholds
+- grade/recommendation compatibility
+- ranking order
+- benchmark mapping
+- advice/evaluation JSONL semantics
+- alpha denominator
+- Real LLM scope
+- scanner fallback semantics
+
+If a request violates these, push back once with evidence and offer a safer alternative. If the user explicitly confirms the change, document the scope change and update the relevant spec/docs.
 
 ---
 
-### P2 — Guardrails Are Product Logic
+## 4. Codex Workflow
 
-Guardrails are not a safety afterthought.  
-Guardrails are core business logic.
+Before editing, identify the touched contract:
 
-The canonical pipeline is:
+- schema
+- guardrails
+- ranking
+- logging
+- evaluation
+- benchmark
+- Streamlit UX
+- LLM boundary
+- scanner
+- security/secrets
+- docs/governance
+
+Then make the smallest reversible change that satisfies the contract.
+
+Use deterministic code and tests for product behavior. Prompt text may guide an LLM, but cannot be the only enforcement for validation, guardrails, ranking, logging, benchmark defaults, hallucination blocking, or alpha denominator rules.
+
+Use `rg` / `rg --files` for search. Use `apply_patch` for manual edits. Do not revert unrelated user changes. Do not use destructive git commands unless the user explicitly asks.
+
+Run the narrowest relevant test first, then expand when risk warrants it. Do not claim success from inspection alone.
+
+Final reports must include:
 
 ```text
-StockAdviceContext JSON
-→ validated context
-→ raw LLM or fake advice
-→ StockAdviceOutput schema validation
-→ deterministic guardrails
-→ GuardedAdviceOutput
-→ ranked table
-→ rendered final_advice only
-→ append-only immutable advice JSONL
-→ follow-up evaluation
-→ append-only evaluation JSONL
+Summary
+- What changed.
+
+Verification
+- [executed] exact commands run
+- [inspected] files reviewed
+- [assumed] anything not verified
+
+Contract Impact
+- Schema / guardrails / ranking / logging / evaluation / UI / config / scanner / docs
+
+Notes
+- Blockers, residual risk, or Phase 2 items.
 ```
-
-Never rely on prompt wording as the only enforcement mechanism for:
-
-- grade/recommendation compatibility,
-- small_probe eligibility,
-- A-grade eligibility,
-- overheat/no-chase downgrade,
-- data quality downgrade,
-- hallucination blocking,
-- benchmark defaulting,
-- evaluation denominator rules.
-
-If it matters, encode it in deterministic Python and tests.
 
 ---
 
-### P3 — Product Boundary Discipline
-
-This v1.2 project has a narrow MVP scope. Respect it.
+## 5. Scope Boundaries
 
 Allowed in v1.2:
 
-- Streamlit batch stock advice page.
-- Loading multiple `StockAdviceContext` JSON files.
-- fake/demo mode.
-- real LLM mode guard UI with API key check, call estimate, and max-call guard.
-- deterministic guardrails.
-- deterministic ranking.
-- row-level failure handling.
-- immutable advice JSONL logging.
-- separate follow-up evaluation JSONL logging.
-- follow-up CSV evaluation.
-- 5-trading-day alpha hit rate.
-- release hardening CI that installs `requirements.txt` and runs the relevant pytest suite.
-- README usage documentation for install, Streamlit launch, fixtures, fake/demo vs real guard mode, tests, and follow-up CSV.
-- release UAT checklist for fixture batch flow and log integrity.
+- Streamlit batch stock advice page
+- structured `StockAdviceContext` JSON input
+- fake/demo mode
+- Real LLM guard UI without provider execution
+- deterministic guardrails and fixed ranking
+- row-level failure handling
+- append-only advice JSONL
+- separate append-only evaluation JSONL
+- follow-up CSV alpha evaluation
 
-Not allowed in v1.2 unless explicitly requested:
+Allowed in v1.3 scanner:
 
-- `Daily AI Advice`.
-- `Risk Review`.
-- market data downloading.
-- full-market scanning that downloads or infers missing market data.
-- trading calendar inference.
-- intraday live tracking.
-- auto order execution.
-- portfolio construction.
-- public advisory language.
-- multi-user authentication.
-- database migrations.
-- vector databases.
-- agent orchestration frameworks.
-- complete multi-provider abstraction.
-- real LLM API execution / provider integration; v1.2 real mode is guard-only until explicitly promoted to Phase 2 or v1.3.
-- large speculative architecture rewrites.
+- local official-format raw file adapter
+- deterministic indicators
+- deterministic filters, scoring, and context writing
+- scanner CLI/API reading four aggregate local raw files
+- one-shot pilot data prep helper under HP-003 only
+- generated `StockAdviceContext` JSON loaded by existing Streamlit flow
 
-If a useful idea belongs to Phase 2, document it only in `docs/phase2_backlog.md`. Do not implement it inside v1.2.
+Not allowed unless explicitly approved:
+
+- auto trading
+- intraday monitoring
+- public investment advisory language
+- trading-calendar inference inside v1.2 evaluation
+- yfinance or unofficial market-data shortcut
+- production downloader, scheduler, scraping, or hidden network fetch
+- database/auth/vector DB/agent framework
+- LLM-generated scanner ranking
+- Real LLM provider execution
+- changing v1.2 guardrails, ranking, logging, evaluation denominator, or benchmark mapping from scanner work
+
+Put Phase 2 ideas only in `docs/phase2_backlog.md`; do not implement them opportunistically.
 
 ---
 
-### P4 — Trader Workflow First
+## 6. Human-Gated Decisions
 
-The user wants to scan candidates quickly.
+Use `humanpending.md` only for true product gates, such as:
 
-Optimize for:
+- changing alpha denominator
+- changing ranking order
+- changing guardrail thresholds
+- changing log schema
+- adding production market-data downloading
+- adding a database
+- changing benchmark mapping
+- changing v1.2/v1.3 scope
+- implementing auto trading
 
-- batch processing,
-- sortable tables,
-- filterable candidate lists,
-- stable ranking,
-- quick row inspection,
-- clear guardrail reasons,
-- explicit warnings,
-- fast demo iteration,
-- easy fixture-based testing.
+Continue all non-dependent work. Each open item must have a clear blocked area, options, recommended default, and status: `open`, `resolved`, or `obsolete`.
 
-Do not optimize for:
+Current resolved decisions:
 
-- long AI prose,
-- impressive explanations,
-- hidden chain-of-thought,
-- decorative UI,
-- complex multi-screen flows,
-- or premature platform architecture.
-
-The core UX question is:
-
-```text
-Can the trader load 20+ stocks, sort/filter candidates, inspect one stock, and later evaluate alpha without opening individual Markdown files?
-```
+- HP-001 = A: long-term source direction is official TWSE / TPEx after-market public data.
+- HP-002 = B: first implementation is local raw file adapter, then downloader after source behavior is verified.
+- HP-003 = B: one-shot official data prep helper allowed for pilot only, not production downloader approval.
 
 ---
 
-## 2. Execution Rules for Codex
+## 7. Data Contract
 
-### E1 — Start From Contracts
+v1.2 input is structured UTF-8 JSON only. Do not parse Markdown contexts.
 
-Before changing code, identify which contract the task touches:
-
-- schema contract,
-- guardrail contract,
-- ranking contract,
-- logging contract,
-- Streamlit UX contract,
-- LLM boundary contract,
-- evaluation contract,
-- file structure contract,
-- security/secrets contract.
-
-Then implement against that contract.
-
----
-
-### E2 — Decisive, But Scope-Bounded
-
-Act decisively on local, reversible, test-covered changes.
-
-Ask only when the decision is:
-
-```text
-value-critical
-+
-not inferable from the spec
-+
-not safely reversible
-```
-
-Do not pause to ask about ordinary implementation details when the spec already implies the correct behavior.
-
----
-
-### E3 — No Unauthorized Scope Expansion
-
-Do not expand the project because it would be "nice".
-
-Bad expansions:
-
-- "Let's add yfinance."
-- "Let's infer trading days automatically."
-- "Let's add a SQLite DB."
-- "Let's add auth."
-- "Let's add provider plugins."
-- "Let's build a full dashboard framework."
-- "Let's parse Markdown contexts."
-- "Let's run live market updates."
-
-These are out of scope for v1.2.
-
-If needed, add the idea to `docs/phase2_backlog.md`, but do not build it. Do not scatter Phase 2 backlog as casual source-code TODO comments. Implementation-code TODOs are allowed only for concrete technical debt tied to the current v1.2 scope.
-
----
-
-### E4 — Local Refactor Only
-
-Refactor only when it directly serves the current task.
-
-Allowed refactor:
-
-- clarifies schema boundaries,
-- removes duplication in guardrails,
-- isolates evaluation logic,
-- makes tests deterministic,
-- fixes a real bug,
-- reduces coupling inside `ai_advisor`.
-
-Not allowed without explicit authorization:
-
-- crossing multiple bounded contexts,
-- redesigning the whole architecture,
-- changing public interfaces casually,
-- moving files away from the recommended structure,
-- replacing Streamlit with another UI framework,
-- changing JSONL log semantics,
-- changing evaluation denominators.
-
----
-
-### E5 — Execution Is Evidence
-
-Do not claim success from inspection alone.
-
-For implementation tasks, run the relevant acceptance command whenever possible.
-
-Use claim tags in final reports:
-
-```text
-[executed] pytest tests/test_ai_advisor_guardrails.py
-[executed] pytest tests/test_ai_advisor_batch.py
-[inspected] verified ranking code follows AGENTS.md priority
-[assumed] Streamlit visual behavior not manually verified in browser
-```
-
-Never say "done" when tests were not run. Say exactly what was and was not verified.
-
----
-
-### E6 — Multi-Agent Resource Allocation
-
-The project may use multiple AI agents, but authority must stay aligned with model capability and product risk.
-
-Recommended roles:
-
-```text
-Supervisor agent
-  scope control, product governance, roadmap, review, Go/No-Go, and contract decisions
-
-Implementation Codex agent
-  core code changes, deterministic logic, tests, local commits, and integration fixes
-
-Auxiliary Copilot / smaller LLM agent
-  low-risk support tasks such as typo checks, checklist drafting, docs consistency checks,
-  temp/log/cache file scans, fixture draft review, and non-authoritative diff summaries
-```
-
-Auxiliary agents must not be the final authority for:
-
-- schema semantics,
-- guardrail thresholds,
-- ranking order,
-- logging or evaluation denominator rules,
-- benchmark mapping,
-- risk/reward construction,
-- `market_scan` fallback semantics,
-- Real LLM scope,
-- Go/No-Go decisions,
-- or any change that could affect alpha evaluation integrity.
-
-When using an auxiliary agent, prefer read-only prompts such as:
-
-```text
-Inspect only; do not modify files. Check whether this diff contains temp files,
-reports/ai_advice logs, stale roadmap status, or obvious documentation drift.
-Return findings only.
-```
-
-Treat auxiliary output as input to review, not as approval. A supervisor or implementation Codex agent must still verify high-impact claims against the project contracts and tests.
-
----
-
-## 3. Project File Structure
-
-Follow this structure unless the existing repository already has a compatible convention:
-
-```text
-src/
-  ai_advisor/
-    __init__.py
-    advice_engine.py
-    batch_engine.py
-    config.py
-    context_builder.py
-    evaluator.py
-    guardrails.py
-    llm_client.py
-    prompt_templates.py
-    report_renderer.py
-    schemas.py
-
-apps/
-  ai_advisor_streamlit.py
-
-config/
-  ai_advisor.yaml
-  prompts/
-    _system_base.md
-    stock_trade_advice.md
-
-tests/
-  fixtures/
-    ai_advisor/
-      stock_contexts/
-      followup_prices_valid.csv
-  test_ai_advisor_schemas.py
-  test_ai_advisor_guardrails.py
-  test_ai_advisor_batch.py
-  test_ai_advisor_evaluator.py
-  test_ai_advisor_streamlit_smoke.py
-
-reports/
-  ai_advice/
-    .gitkeep
-
-docs/
-  phase2_backlog.md
-  ai_advisor_v1_3_market_scanner_roadmap.md
-  market_data_source_decision.md
-  market_data_scanner_risk_register.md
-  market_data_scanner_v1_3_plan.md
-  scanner_lite_context_builder_plan.md
-  release_uat_checklist.md
-
-.github/
-  workflows/
-    ci.yml
-
-README.md
-```
-
-Do not scatter `ai_advisor` logic across unrelated folders.
-
----
-
-## 4. Data Model Rules
-
-### D1 — StockAdviceContext Is JSON-Only
-
-v1.2 accepts structured UTF-8 JSON contexts only.
-
-Do not parse Markdown in v1.2.
-
-Required context fields:
+Required `StockAdviceContext` fields:
 
 ```text
 date
@@ -430,449 +245,113 @@ technical.is_limit_up
 risk.nearest_support
 risk.planned_target
 data_source_notes
+scanner_metadata
 ```
 
-If `market_type` is missing or explicitly set to `unknown`:
+If `market_type` is missing or `unknown`:
+
+- set `market_type = "unknown"`
+- default `benchmark_symbol = "TAIEX"`
+- add a data quality warning
+- exception: preserve an explicitly valid `benchmark_symbol` of `TAIEX` or `OTC`, while still warning about unknown market type
+
+Benchmark mapping:
 
 ```text
-market_type = "unknown"
-benchmark_symbol = "TAIEX"
-data_quality_warnings += ["market_type missing or unknown; default benchmark_symbol set to TAIEX"]
+listed  -> TAIEX
+otc     -> OTC
+missing -> TAIEX + warning
+unknown -> TAIEX + warning unless valid benchmark_symbol is explicit
 ```
 
-Exception: if a valid `benchmark_symbol` is explicitly provided (`TAIEX` or `OTC`), preserve it and still warn that `market_type` is unknown.
+Never infer benchmark from stock id unless the spec is updated.
 
-This behavior must be deterministic and tested.
+Key enums:
+
+```text
+market_type: listed / otc / unknown
+benchmark_symbol: TAIEX / OTC / unknown
+risk_state: risk_on / neutral / risk_off
+theme.lifecycle: early / main_uptrend / late_stage / fading / broken / unknown
+leader_rank: leader_1 / leader_2 / follower / laggard / unknown
+technical.position: breakout / pullback_to_ma5 / pullback_to_ma10_and_rebound / near_ma20_support / extended_above_ma / breakdown / range_bound / unknown
+recommendation: observe / wait_pullback / small_probe / avoid_chasing / reject
+grade: A / B / C / Reject
+```
+
+`StockAdviceOutput` must validate before guardrails and include recommendation, grade, confidence, summary, bull/bear cases, entry, stop, take-profit, invalidation, confirmation, risk flags, evidence, and data quality warnings.
+
+Render only `GuardedAdviceOutput.final_advice` as final user-facing advice. Preserve raw advice for audit.
 
 ---
 
-### D1.1 — Context Generation Boundary
+## 8. Guardrail Contract
 
-If the user has no `StockAdviceContext` folder, do not fabricate context data.
-
-There are two separate upstream paths:
+Grade/recommendation compatibility:
 
 ```text
-user already has an after-market CSV -> optional Scanner Lite / CSV Context Builder
-user has no CSV or context data      -> Market Data Scanner, Phase 2 / v1.3
+A       -> wait_pullback or small_probe only
+B       -> observe / wait_pullback / small_probe
+C       -> observe / wait_pullback / avoid_chasing only
+Reject  -> avoid_chasing / reject only
 ```
 
-Scanner Lite may only convert a user-provided CSV into `StockAdviceContext` JSON. It must not download market data or infer missing market facts. Canonical optional plan: `docs/scanner_lite_context_builder_plan.md`.
-
-Market Data Scanner is a larger Phase 2 / v1.3 product. It may download or ingest official after-market market data, calculate deterministic technical/risk fields, and generate context JSON. It must be designed and reviewed separately before implementation.
-
-Canonical v1.3 planning docs:
+Recommendation meanings:
 
 ```text
-docs/market_data_scanner_v1_3_plan.md
-docs/ai_advisor_v1_3_market_scanner_roadmap.md
-docs/market_data_source_decision.md
-docs/market_data_scanner_risk_register.md
+observe        = watch only, no trade plan yet
+wait_pullback  = wait for pullback, do not chase
+small_probe    = small position allowed only with trigger and stop
+avoid_chasing  = do not chase; risk/quality too poor or overheated
+reject         = discard; data or risk condition fails
 ```
 
-Neither path may change advice guardrails, fixed ranking, append-only logging, benchmark mapping, or alpha denominator semantics.
+Balanced guardrails:
+
+- missing required data: final grade <= C, recommendation in `observe` / `avoid_chasing` / `reject`, confidence <= 60, and warnings list missing fields
+- missing `risk.invalid_level`, `risk.risk_reward_ratio`, `technical.position`, `theme.lifecycle`, or `market_regime.risk_state`: `small_probe` forbidden
+- A requires `risk_reward_ratio >= 2.0`
+- `small_probe` requires `risk_reward_ratio >= 1.5`
+- `technical.is_overheated == true` forbids `small_probe`
+- `theme.lifecycle == late_stage` forbids A but may allow `wait_pullback`
+- `theme.lifecycle in fading / broken` becomes `avoid_chasing` or `reject`
+- `risk.invalid_level is null` forbids positive advice
+- `market_regime.risk_state == risk_off` forbids A
+- no-chase downgrade applies when `technical.position == extended_above_ma`, `technical.is_limit_up == true`, or `stock.change_pct >= 7`
+
+Restricted unsupported-claim terms:
+
+```text
+新聞 / 法人 / 外資 / 投信 / 營收 / EPS / 目標價 / 財報 / 訂單
+```
+
+If advice uses these without matching evidence in context:
+
+- `hallucination_suspected = true`
+- `was_blocked = true`
+- reason must name the unsupported term
+
+Every downgrade or block needs an explicit reason.
 
 ---
 
-### D2 — Fixed Enums Are Contracts
-
-Do not introduce new enum values casually.
-
-Allowed `market_type`:
-
-```text
-listed / otc / unknown
-```
-
-Allowed `benchmark_symbol`:
-
-```text
-TAIEX / OTC / unknown
-```
-
-Allowed `risk_state`:
-
-```text
-risk_on / neutral / risk_off
-```
-
-Allowed `theme.lifecycle`:
-
-```text
-early / main_uptrend / late_stage / fading / broken / unknown
-```
-
-Allowed `leader_rank`:
-
-```text
-leader_1 / leader_2 / follower / laggard / unknown
-```
-
-Allowed `technical.position`:
-
-```text
-breakout
-pullback_to_ma5
-pullback_to_ma10_and_rebound
-near_ma20_support
-extended_above_ma
-breakdown
-range_bound
-unknown
-```
-
-Allowed `recommendation`:
-
-```text
-observe
-wait_pullback
-small_probe
-avoid_chasing
-reject
-```
-
-Allowed `grade`:
-
-```text
-A
-B
-C
-Reject
-```
-
----
-
-## 5. LLM Integration Rules
-
-### L1 — LLM Is Advisory, Not Authoritative
-
-The LLM may generate structured advice.  
-It does not decide final truth.
-
-The deterministic guardrail layer decides whether the advice can be displayed as final.
-
-Renderers and UI must display only:
-
-```text
-GuardedAdviceOutput.final_advice
-```
-
-Never render raw LLM advice as the user's final recommendation.
-
----
-
-### L2 — Fake/Demo Mode Must Be Stable
-
-Fake/demo mode is a first-class development and testing path.
-
-It must:
-
-- not call external LLM APIs,
-- produce stable outputs for fixtures,
-- allow 20+ stock batch testing,
-- support deterministic guardrail tests,
-- allow Streamlit MVP work without secrets.
-
-Do not make fake mode random unless seeded and explicitly tested.
-
----
-
-### L3 — Real LLM Mode Must Be Guarded
-
-Real LLM mode must:
-
-- check `OPENAI_API_KEY`,
-- calculate `estimated_llm_calls = number_of_valid_contexts`,
-- block runs above `max_llm_calls_per_run`,
-- handle single-file request failure without breaking the whole batch,
-- convert per-stock failures into blocked/error rows.
-
-Do not allow a missing API key to crash the app.
-
-For v1.2 release hardening, real LLM mode remains guard-only unless the user explicitly changes scope.
-Do not wire real API execution in v1.2. Record true provider execution in `docs/phase2_backlog.md`.
-
----
-
-### L4 — Prompt Cannot Replace Code
-
-Prompt text may instruct the model, but it is not enough.
-
-These must be enforced in code:
-
-- schema validation,
-- enum validation,
-- grade/recommendation compatibility,
-- confidence caps,
-- downgrade/block reasons,
-- evidence-based hallucination guard,
-- ranking order,
-- alpha denominator rules,
-- missing benchmark handling.
-
----
-
-### L5 — No Unsupported Claims
-
-The model must not use or imply unsupported data such as:
-
-```text
-新聞
-法人
-外資
-投信
-營收
-EPS
-目標價
-財報
-訂單
-```
-
-unless the input context explicitly provides evidence fields for those claims.
-
-If these terms appear in advice without matching evidence:
-
-```text
-hallucination_suspected = true
-was_blocked = true
-```
-
-This must be implemented in deterministic code and tested.
-
----
-
-## 6. Output Schema Rules
-
-### O1 — Raw Advice Must Match Schema
-
-`StockAdviceOutput` must include:
-
-```text
-recommendation
-grade
-confidence
-summary
-bull_case
-bear_case
-entry_conditions
-stop_loss_plan
-take_profit_plan
-invalidation_conditions
-next_session_confirmation
-risk_flags
-evidence
-data_quality_warnings
-```
-
-The output must validate before guardrails.
-
-Invalid raw output becomes an error/blocked row, not a batch crash.
-
----
-
-### O2 — GuardedAdviceOutput Is the Product Output
-
-Every successful or failed stock should become a `GuardedAdviceOutput`-compatible row.
-
-It must preserve:
-
-```text
-raw_advice
-final_advice
-context_summary
-guardrail_result
-```
-
-`guardrail_result` must include:
-
-```text
-was_downgraded
-was_blocked
-final_grade
-final_recommendation
-reasons
-hallucination_suspected
-error_message
-```
-
-Do not lose raw advice when guardrails downgrade it.
-
----
-
-### O3 — Recommendation Semantics
-
-Use these meanings consistently:
-
-```text
-observe          可觀察，尚未形成交易計畫
-wait_pullback    只等回測，不追價
-small_probe      可小部位試單，但必須有停損與觸發條件
-avoid_chasing    不追價，條件太差或過熱
-reject           放棄，資料或風險條件不合格
-```
-
-Grade compatibility:
-
-```text
-A       only with wait_pullback or small_probe
-B       with observe / wait_pullback / small_probe
-C       only with observe / wait_pullback / avoid_chasing
-Reject  only with avoid_chasing / reject
-```
-
-Invalid combinations must be corrected or blocked by guardrails.
-
----
-
-## 7. Balanced Guardrails
-
-Guardrails must be deterministic code.
-
-### G1 — Data Guard
-
-If required data is missing:
-
-```text
-final_grade <= C
-final_recommendation in [observe, avoid_chasing, reject]
-confidence <= 60
-data_quality_warnings must list missing fields
-```
-
-If any of these fields are missing, `small_probe` is forbidden:
-
-```text
-risk.invalid_level
-risk.risk_reward_ratio
-technical.position
-theme.lifecycle
-market_regime.risk_state
-```
-
----
-
-### G2 — Balanced Risk Guard
-
-Rules:
-
-```text
-A grade requires risk.risk_reward_ratio >= 2.0
-small_probe requires risk.risk_reward_ratio >= 1.5
-is_overheated == true forbids small_probe
-late_stage forbids A, but may allow wait_pullback
-fading / broken must become avoid_chasing or reject
-risk.invalid_level is null forbids positive advice
-market_regime.risk_state == risk_off forbids A
-```
-
-Do not weaken these thresholds without explicit user authorization.
-
----
-
-### G3 — No Chase Guard
-
-Default downgrade to `wait_pullback` or `avoid_chasing` when:
-
-```text
-technical.position == extended_above_ma
-technical.is_limit_up == true
-stock.change_pct >= 7
-```
-
-If support proximity cannot be determined, record a risk flag. Do not invent support data.
-
----
-
-### G4 — Hallucination Guard
-
-If advice uses restricted information terms without evidence:
-
-```text
-hallucination_suspected = true
-was_blocked = true
-```
-
-Restricted information terms include:
-
-```text
-新聞
-法人
-外資
-投信
-營收
-EPS
-目標價
-財報
-訂單
-```
-
-If evidence exists in context, allow it, but display the evidence source.
-
----
-
-### G5 — Downgrade Transparently
-
-Every downgrade or block must include an explicit reason.
-
-Examples:
-
-```text
-risk_reward_ratio below 1.5; small_probe downgraded
-late_stage cannot be grade A under balanced profile
-market_type missing; default benchmark_symbol set to TAIEX
-hallucination suspected: unsupported term "外資"
-```
-
-Never silently downgrade.
-
----
-
-## 8. Batch Engine Rules
+## 9. Batch And Ranking Contract
 
 Required interfaces:
 
 ```python
-def generate_stock_batch_advice(
-    context_paths: list[str],
-) -> list[GuardedAdviceOutput]:
-    ...
-
-
-def rank_stock_advices(
-    outputs: list[GuardedAdviceOutput],
-) -> list[RankedStockAdvice]:
-    ...
-
-
-def update_followup_returns(
-    advice_log_path: str,
-    followup_csv_path: str,
-    evaluation_log_path: str = "reports/ai_advice/ai_advice_evaluation.jsonl",
-) -> AlphaSummary:
-    ...
+def generate_stock_batch_advice(context_paths: list[str]) -> list[GuardedAdviceOutput]: ...
+def rank_stock_advices(outputs: list[GuardedAdviceOutput]) -> list[RankedStockAdvice]: ...
+def update_followup_returns(advice_log_path: str, followup_csv_path: str, evaluation_log_path: str = "reports/ai_advice/ai_advice_evaluation.jsonl") -> AlphaSummary: ...
 ```
 
-`update_followup_returns(...)` is a compatibility name only. It must not rewrite or mutate `ai_advice_log.jsonl`. It reads immutable advice snapshots, calculates follow-up metrics, appends evaluation records to `ai_advice_evaluation.jsonl`, and returns an `AlphaSummary`.
+Single-file failures must become row-level blocked/error outputs, not batch crashes:
 
-Single-file failures must not break the batch.
+- context validation failed -> blocked row
+- LLM request failed -> error row
+- hallucination suspected -> blocked row
 
-Required row-level failure behavior:
-
-```text
-context validation failed -> blocked row
-LLM request failed -> error row
-hallucination suspected -> blocked row
-```
-
-Batch execution should return as many rows as possible.
-
----
-
-## 9. Ranking Rules
-
-Ranking must be fixed and stable.
-
-Sort priority:
+Ranking is fixed and stable:
 
 ```text
 1. was_blocked == false first
@@ -880,193 +359,38 @@ Sort priority:
 3. recommendation: small_probe > wait_pullback > observe > avoid_chasing > reject
 4. confidence high to low
 5. risk_flags count low to high
-6. stock_id ascending as stable fallback
+6. stock_id ascending
 ```
 
-Do not replace this ranking with model-generated ranking.
+Do not replace this with model-generated ranking.
 
 Required table columns:
 
 ```text
-rank
-stock_id
-stock_name
-grade
-recommendation
-confidence
-risk_flags_count
-data_quality_warnings_count
-was_blocked
-guardrail_reasons
+rank, stock_id, stock_name, grade, recommendation, confidence,
+risk_flags_count, data_quality_warnings_count, was_blocked, guardrail_reasons
 ```
-
-Any change to ranking is a high-impact product change and requires explicit authorization.
 
 ---
 
-## 10. Streamlit App Rules
+## 10. Logging And Evaluation Contract
 
-Manual/dev launch command:
-
-```bash
-streamlit run apps/ai_advisor_streamlit.py
-```
-
-This is a long-running local server command, not an automated acceptance command. Agents must not use it as proof of verification unless they actually start the server, inspect the app, and then shut the server down.
-
-### Required Sidebar Controls
-
-```text
-mode: fake/demo / real LLM
-context input: upload JSON files / folder path
-max batch size
-show blocked rows: true / false
-follow-up CSV uploader
-```
-
-### Required Main Views
-
-```text
-Batch Results
-  sorted table
-  filters
-  summary metrics
-
-Stock Detail
-  conclusion
-  core reasons
-  bull case
-  bear case
-  entry plan
-  stop loss
-  take profit
-  invalidation
-  next-session confirmation
-  data quality warnings
-
-Alpha Evaluation
-  actionable candidate count
-  complete follow-up count
-  alpha hit rate
-  average alpha_5d_pct
-```
-
-### Required Safety UI
-
-Every page must show:
-
-```text
-交易決策輔助，不是保證獲利或下單指令。
-```
-
-Real LLM mode must show before submission:
-
-```text
-estimated_llm_calls = number_of_valid_contexts
-```
-
-If the estimate exceeds `max_llm_calls_per_run`, block submission.
-
----
-
-## 11. Logging Rules
-
-There are two separate append-only JSONL logs. Do not collapse them into one mutable file.
-
-### 11.1 Immutable Advice Snapshot Log
-
-Advice snapshots are append-only and immutable:
+There are two separate append-only JSONL logs:
 
 ```text
 reports/ai_advice/ai_advice_log.jsonl
-```
-
-Each advice entry must preserve the state known at advice generation time:
-
-```text
-timestamp
-advice_type
-advice_date
-stock_id
-stock_name
-advice_close
-market_type
-benchmark_symbol
-input_context_hash
-model
-prompt_version
-strategy_profile
-raw_recommendation
-raw_grade
-final_recommendation
-final_grade
-confidence
-was_downgraded
-was_blocked
-hallucination_suspected
-guardrail_reasons
-stock_return_5d_pct
-benchmark_return_5d_pct
-alpha_5d_pct
-alpha_hit_5d
-was_useful
-human_feedback
-```
-
-The alpha fields inside advice entries are snapshot placeholders and should be `null` at advice creation. They exist for schema compatibility and must not be filled later by rewriting historical advice rows.
-
-Never overwrite, reorder, deduplicate, or mutate historical advice snapshots during normal evaluation.
-
-### 11.2 Follow-Up Evaluation Log
-
-Follow-up results must be appended to a separate log:
-
-```text
 reports/ai_advice/ai_advice_evaluation.jsonl
 ```
 
-Evaluation records must be keyed by:
+Advice snapshots are immutable. At creation, alpha fields must be `null`. Normal evaluation must never rewrite, reorder, deduplicate, or mutate historical advice rows.
+
+Evaluation records append to the evaluation log and are keyed by:
 
 ```text
 stock_id + advice_date + input_context_hash
 ```
 
-Each evaluation entry should preserve:
-
-```text
-timestamp
-evaluation_type
-advice_date
-stock_id
-input_context_hash
-advice_close
-close_5d
-benchmark_return_5d_pct
-stock_return_5d_pct
-alpha_5d_pct
-alpha_hit_5d
-included_in_alpha_denominator
-exclusion_reason
-source_followup_csv
-```
-
-If multiple evaluations are appended for the same key, consumers should use the latest valid evaluation record by timestamp and report that a superseding evaluation exists. Do not rewrite older evaluation records.
-
-### 11.3 Migration / Repair Exception
-
-A rewrite of historical JSONL is allowed only for an explicit migration or repair task. Such a task must:
-
-1. create a timestamped backup,
-2. write a migration note,
-3. preserve original raw advice content,
-4. report before/after record counts,
-5. and never change alpha denominator semantics silently.
-
-Logs are part of evaluation integrity.
-
----
-
-## 12. Follow-Up Evaluation Rules
+If multiple evaluations exist for the same key, consumers use the latest valid record by timestamp and report supersession. Do not rewrite older records.
 
 Follow-up CSV format:
 
@@ -1083,112 +407,117 @@ alpha_5d_pct = stock_return_5d_pct - benchmark_return_5d_pct
 alpha_hit_5d = alpha_5d_pct > 0
 ```
 
-Evaluation output policy:
+Main denominator includes only actionable candidates with complete follow-up:
 
 ```text
-read ai_advice_log.jsonl
-match by stock_id + advice_date + input_context_hash when available
-append evaluation result to ai_advice_evaluation.jsonl
-do not mutate ai_advice_log.jsonl
-```
-
-Main alpha metric:
-
-```text
-alpha_hit_rate_5d_vs_market =
-  alpha_hit_5d true count among actionable candidates with complete follow-up /
-  actionable candidates with complete follow-up
-```
-
-Actionable candidate definition:
-
-```text
-grade in ["A", "B"]
-recommendation in ["wait_pullback", "small_probe"]
+final_grade in ["A", "B"]
+final_recommendation in ["wait_pullback", "small_probe"]
 was_blocked == false
+benchmark_return_5d_pct present
 ```
 
-`observe` must not enter the main denominator.
+`observe` is excluded. Missing benchmark return excludes the row and must surface a warning.
 
-If `benchmark_return_5d_pct` is missing:
+Do not infer trading calendars in v1.2. The CSV is assumed to already represent the 5th trading day close.
 
-```text
-exclude that row from denominator
-show warning
-```
-
-Do not infer trading calendars in v1.2.  
-The CSV is assumed to already represent the 5th trading day close.
+Historical JSONL rewrite is allowed only for an explicit migration/repair task with backup, migration note, before/after counts, raw advice preservation, and no silent denominator changes.
 
 ---
 
-## 13. Benchmark Rules
+## 11. Streamlit Contract
 
-Benchmark mapping:
+Launch command:
 
-```text
-market_type == listed  -> benchmark_symbol = TAIEX
-market_type == otc     -> benchmark_symbol = OTC
-market_type missing    -> benchmark_symbol = TAIEX + data_quality_warning
-market_type == unknown -> benchmark_symbol = TAIEX + data_quality_warning, unless valid benchmark_symbol is explicitly provided
+```bash
+python -m streamlit run apps/ai_advisor_streamlit.py
 ```
 
-Do not silently change benchmark based on stock ID unless the spec is updated.
+Required sidebar controls:
+
+- mode: `fake/demo` / `real LLM`
+- context input: upload JSON files / folder path
+- max batch size
+- show blocked rows
+- follow-up CSV uploader
+
+Required views:
+
+- Batch Results: sorted table, filters, summary metrics
+- Stock Detail: conclusion, reasons, bull/bear cases, entry, stop, take profit, invalidation, next-session confirmation, data quality warnings
+- Alpha Evaluation: actionable count, complete follow-up count, alpha hit rate, average alpha
+
+Real LLM mode must:
+
+- check `OPENAI_API_KEY`
+- show `estimated_llm_calls = number_of_valid_contexts`
+- block runs above `max_llm_calls_per_run`
+- not crash if key is missing
+- not call a real provider in v1.2 unless explicitly promoted
+
+Manual Streamlit verification requires starting the server, opening the local URL, inspecting required controls/views, stopping the server, and reporting as `[inspected]`.
 
 ---
 
-## 14. Configuration and Secrets
+## 12. Scanner v1.3 Contract
 
-Required config file:
+Scanner purpose:
+
+```text
+after-market raw data
+-> deterministic features
+-> deterministic candidate filter/score
+-> validated StockAdviceContext JSON
+```
+
+Scanner must not:
+
+- mutate `reports/ai_advice/*.jsonl`
+- use LLM ranking
+- fabricate themes, news, institutions, EPS, revenue, target prices, orders, or financial claims
+- change advice guardrails/ranking/logging/evaluation/benchmark contracts
+- implement production downloader without a new gate
+
+Local raw scanner reads exactly four aggregate official-format files:
+
+```text
+listed stock daily
+OTC stock daily
+TAIEX benchmark
+OTC benchmark
+```
+
+Deterministic scanner capabilities may include MA5/10/20/60, 20-day average volume, volume ratio, prior high/low, MA20 distance, RS20/RS60, and benchmark regime.
+
+`market_scan` fallback rules:
+
+- `theme.name = "market_scan"`
+- `theme.rank = 999`
+- `theme.score = 50`
+- add data quality warning
+- do not describe it as a real sector/theme
+- scanner score/rank belongs in `scanner_metadata`, not `theme.*`
+
+Risk/reward rules:
+
+- `risk.planned_target` must come from structural market levels
+- do not use `close + 2R` or other self-fulfilling formulas as primary target
+- fallback proxy targets, if useful, belong only in notes/metadata and must not drive RR, hard skip, or ranking
+- hard skip is for data validity or clearly unusable trade geometry
+- trade-quality concerns should usually be penalty/warning, then downstream guardrails decide final advice
+
+Scanner-only `risk_state = "unknown"` must not be written into v1.2 `StockAdviceContext.market_regime.risk_state`; insufficient regime data needs a deterministic skip/warning/block path before context writing.
+
+---
+
+## 13. Config And Secrets
+
+Expected config path:
 
 ```text
 config/ai_advisor.yaml
 ```
 
-Expected values:
-
-```yaml
-provider: openai
-model: ${LLM_MODEL:-gpt-5.5}
-reasoning_effort: ${LLM_REASONING_EFFORT:-medium}
-temperature: 0.2
-max_output_tokens: 3000
-prompt_version: v1.2
-strategy_profile: balanced
-
-paths:
-  prompt_dir: config/prompts
-  output_dir: reports/ai_advice
-  log_path: reports/ai_advice/ai_advice_log.jsonl
-  evaluation_log_path: reports/ai_advice/ai_advice_evaluation.jsonl
-
-batch:
-  min_supported_stocks: 20
-  max_stocks_per_run: 50
-  max_llm_calls_per_run: 50
-
-evaluation:
-  alpha_horizon_days: 5
-  horizon_type: trading_days
-  default_benchmark: TAIEX
-
-guardrails:
-  min_rr_for_small_probe: 1.5
-  min_rr_for_grade_a: 2.0
-  max_confidence_when_data_missing: 60
-  max_confidence_when_guardrail_downgraded: 70
-```
-
-`.env` may contain:
-
-```env
-OPENAI_API_KEY=your_key_here
-LLM_PROVIDER=openai
-LLM_MODEL=gpt-5.5
-LLM_REASONING_EFFORT=medium
-```
-
-`.gitignore` must include:
+Generated logs and secrets must stay uncommitted:
 
 ```text
 .env
@@ -1197,258 +526,67 @@ secrets.json
 reports/ai_advice/*.jsonl
 ```
 
-Never commit secrets.  
 Never print API keys in logs, tests, Streamlit UI, or exception traces.
 
 ---
 
-## 15. Testing Philosophy
+## 14. Testing Commands
 
-Tests encode product contracts.
-
-Do not write tests that only mirror implementation details.  
-Each test should protect a user-visible or system-critical guarantee.
-
-Required test areas:
-
-### Schema Tests
-
-- valid `StockAdviceContext` passes,
-- missing `market_type` does not fail but warns and defaults benchmark to TAIEX,
-- explicit `market_type = unknown` warns and defaults benchmark to TAIEX unless a valid benchmark is explicitly provided,
-- invalid `StockAdviceOutput` enum fails validation.
-
-### Guardrail Tests
-
-- complete data and `risk_reward_ratio >= 1.5` may allow `small_probe`,
-- `risk_reward_ratio < 1.5` forbids `small_probe`,
-- `is_overheated = true` forbids `small_probe`,
-- `late_stage` forbids A but may allow `wait_pullback`,
-- `fading / broken` becomes `avoid_chasing` or `reject`,
-- restricted terms with evidence do not block,
-- restricted terms without evidence block.
-
-### Batch Tests
-
-- 20+ fixtures can be processed,
-- one LLM failure does not stop the batch,
-- one validation failure does not stop the batch,
-- ranking follows fixed priority.
-
-### Streamlit Smoke Tests
-
-- fixture folder can load,
-- fake/demo and real LLM modes can switch,
-- sorted table displays,
-- detail view displays one stock plan,
-- follow-up CSV displays 5-day alpha hit rate.
-
-### Evaluation Tests
-
-- positive 5-day alpha sets `alpha_hit_5d = true`,
-- `observe` is excluded from main denominator,
-- missing `benchmark_return_5d_pct` excludes row and warns,
-- follow-up evaluation appends to `ai_advice_evaluation.jsonl` and does not mutate `ai_advice_log.jsonl`.
-
----
-
-## 16. Acceptance Commands
-
-Use the narrowest relevant command first, then expand.
-
-### Session F — Stock Batch Core
+Use the narrowest relevant command first:
 
 ```bash
 pytest tests/test_ai_advisor_schemas.py tests/test_ai_advisor_guardrails.py tests/test_ai_advisor_batch.py
-```
-
-### Session G — Streamlit MVP
-
-Automated acceptance:
-
-```bash
-pytest tests/test_ai_advisor_streamlit_smoke.py
-```
-
-Manual/dev launch only:
-
-```bash
-streamlit run apps/ai_advisor_streamlit.py
-```
-
-Manual Streamlit verification requires all of the following:
-
-1. start the server,
-2. open the displayed local URL,
-3. verify the required views/controls,
-4. stop the server process,
-5. report the inspection as `[inspected]`, not `[executed] automated acceptance`.
-
-### Session H — Follow-Up Evaluation
-
-```bash
 pytest tests/test_ai_advisor_evaluator.py
+pytest tests/test_ai_advisor_streamlit_smoke.py
+pytest tests/test_ai_advisor_market_scanner.py tests/test_ai_advisor_market_scanner_indicators.py tests/test_ai_advisor_market_scanner_context_writer.py tests/test_ai_advisor_market_scanner_filter_score.py tests/test_ai_advisor_market_scanner_integration.py
 ```
 
-### Full Relevant Test Set
+Full relevant set:
 
 ```bash
-pytest tests/test_ai_advisor_schemas.py \
-       tests/test_ai_advisor_guardrails.py \
-       tests/test_ai_advisor_batch.py \
-       tests/test_ai_advisor_evaluator.py \
-       tests/test_ai_advisor_streamlit_smoke.py
+pytest tests/test_ai_advisor_schemas.py tests/test_ai_advisor_guardrails.py tests/test_ai_advisor_batch.py tests/test_ai_advisor_evaluator.py tests/test_ai_advisor_streamlit_smoke.py tests/test_ai_advisor_market_scanner.py tests/test_ai_advisor_market_scanner_indicators.py tests/test_ai_advisor_market_scanner_context_writer.py tests/test_ai_advisor_market_scanner_filter_score.py tests/test_ai_advisor_market_scanner_integration.py
 ```
 
-If Streamlit cannot be manually verified in the current environment, state that clearly.
-
-### Release Hardening
+Release hardening also installs dependencies:
 
 ```bash
 python -m pip install -r requirements.txt
-pytest tests/test_ai_advisor_schemas.py \
-       tests/test_ai_advisor_guardrails.py \
-       tests/test_ai_advisor_batch.py \
-       tests/test_ai_advisor_evaluator.py \
-       tests/test_ai_advisor_streamlit_smoke.py
+python -m pip install -e .
 ```
 
-Release hardening must also add or verify:
-
-- `.github/workflows/ci.yml` installs from `requirements.txt` and runs the full relevant pytest set.
-- `README.md` explains install, launch, fixture usage, fake/demo mode, real LLM guard-only status, follow-up CSV, and test commands.
-- `docs/release_uat_checklist.md` documents manual fixture batch flow and JSONL log integrity checks.
-- Real LLM execution remains deferred to Phase 2 / v1.3 unless explicitly authorized.
+For docs-only governance edits, at minimum inspect diff and line count; run tests only if behavior, commands, or contracts are changed.
 
 ---
 
-## 17. Reporting Format for Codex
+## 15. Review Stance
 
-When finishing a task, report in this structure:
+When asked to review, prioritize:
 
-```text
-Summary
-- What changed.
+- future-data leakage
+- evaluation pollution
+- JSONL mutation
+- denominator drift
+- benchmark drift
+- non-deterministic ranking/scoring
+- scope creep
+- fabricated evidence
+- untested guardrail behavior
+- Real LLM execution sneaking into guard-only scope
+- production downloader sneaking in before approval
 
-Verification
-- [executed] exact commands run
-- [inspected] files reviewed
-- [assumed] anything not verified
-
-Contract Impact
-- Schema / guardrails / ranking / logging / evaluation / UI / config
-
-Notes
-- Any blocked items.
-- Any Phase 2 ideas added to `docs/phase2_backlog.md`.
-```
-
-Do not write vague reports like:
-
-```text
-Done, should work.
-```
-
-Use precise evidence.
+Report findings first by severity: High, Medium, Low. Then open questions, Go/No-Go, and next action.
 
 ---
 
-## 18. Human-Gated Decisions
+## 16. Final Principle
 
-Create or update `humanpending.md` only for true human-gated decisions.
+Do not make AI sound smarter at the cost of auditability.
 
-Examples of human-gated decisions:
-
-- changing alpha denominator,
-- changing ranking order,
-- changing guardrail thresholds,
-- changing log schema,
-- adding market data downloading,
-- adding a database,
-- changing benchmark mapping,
-- changing v1.2 scope,
-- implementing auto-trading behavior.
-
-When a task is human-gated, continue all non-dependent work.
-
-### Required `humanpending.md` Format
-
-Use one compact Markdown table plus optional notes.
-
-```markdown
-# Human-Pending Decisions
-
-| id | date | status | blocking_area | decision_needed | options | recommended_default | resolution | resolved_at |
-|---|---|---|---|---|---|---|---|---|
-| HP-001 | 2026-05-23 | open | evaluation | Choose alpha denominator change? | A: keep v1.2 denominator; B: include observe | A |  |  |
-```
-
-Allowed `status` values:
-
-```text
-open / resolved / obsolete
-```
-
-Lifecycle rules:
-
-- Add a row only when work is genuinely blocked by a human decision.
-- Keep shipping all non-dependent work.
-- Before finishing the task, re-check all `open` items.
-- Mark an item `resolved` when the user decides.
-- Mark an item `obsolete` when later work makes it no longer gated.
-- Do not leave vague stale blockers. Every open row must name the blocked area and recommended default.
-
----
-
-## 19. Push-Back Duty
-
-If the user request or local code direction violates the product principles, push back once with evidence and a safer alternative.
-
-Examples:
-
-- "This would leak future data into evaluation."
-- "This changes the alpha denominator and would make historical metrics incomparable."
-- "This moves guardrail enforcement into prompt text only, which violates deterministic product logic."
-- "This adds a Phase 2 feature into v1.2 and risks delaying the MVP."
-
-If the user explicitly confirms the change afterward, implement it and document the scope change.
-
----
-
-## 20. Definition of Done
-
-v1.2 is done only when:
-
-- Streamlit app is the primary entry point.
-- fake/demo mode can batch process at least 20 fixture stocks.
-- real LLM mode has API key check, LLM call estimate, and max-call guard; real API execution is not required for v1.2.
-- results table supports sorting/filtering and row detail inspection.
-- single-stock failures do not interrupt the batch.
-- balanced guardrails pass tests.
-- evidence-based hallucination guard passes tests.
-- immutable advice snapshot log contains advice close, market type, benchmark, and null alpha placeholder fields.
-- follow-up evaluation log contains computed 5-day return, benchmark return, alpha, denominator inclusion, and exclusion reason.
-- follow-up CSV import calculates 5-trading-day alpha hit rate.
-- `observe` is excluded from main alpha denominator.
-- GitHub Actions CI exists and runs dependency install plus the relevant pytest suite.
-- `README.md` gives a new-session operator enough instructions to install dependencies, run Streamlit, use fixtures, run tests, and understand fake/demo vs real guard mode.
-- `docs/release_uat_checklist.md` exists and covers fixture batch flow, follow-up CSV, advice log immutability, and evaluation log append-only behavior.
-- secrets are not committed.
-- relevant tests are executed and reported.
-
----
-
-## 21. Final Principle
-
-This product is not about making AI write more.
-
-It is about helping the trader find better candidates faster, preserve decision evidence, and verify after 5 trading days whether the system actually found alpha.
-
-When uncertain, choose the implementation that maximizes:
+When uncertain, choose the path that preserves:
 
 ```text
 determinism
 + auditability
 + batch workflow speed
-+ evaluation integrity
++ alpha evaluation integrity
 ```
